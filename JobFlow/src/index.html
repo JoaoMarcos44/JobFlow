@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job</title>
+    <title>JobFlow - Login</title>
     <!-- Importação de fonte moderna -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -248,144 +248,144 @@
 </head>
 <body>
 
-<div class="login-card">
-    <div class="brand">
-        <div class="logo-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
+    <div class="login-card">
+        <div class="brand">
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h1>JobFlow</h1>
+            <p>O seu funil de carreiras inteligente.</p>
         </div>
-        <h1>JobFlow</h1>
-        <p>O seu funil de carreiras inteligente.</p>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+
+            <div class="form-group">
+                <label for="email">E-mail Corporativo</label>
+                <input type="email" id="email" placeholder="dev@exemplo.com" required>
+                <div class="error-message" id="emailError">Insira um e-mail válido.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Palavra-passe</label>
+                <input type="password" id="password" placeholder="••••••••" required minlength="6">
+                <div class="error-message" id="passwordError">A palavra-passe deve ter pelo menos 6 caracteres.</div>
+            </div>
+
+            <div class="options">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="remember"> Manter sessão iniciada
+                </label>
+                <a href="#" class="forgot-password">Esqueceu a senha?</a>
+            </div>
+
+            <button type="submit" class="btn-primary" id="submitBtn">
+                <span id="btnText">Entrar na Plataforma</span>
+                <span class="spinner" id="btnSpinner"></span>
+            </button>
+
+        </form>
+
+        <div class="register-prompt">
+            Ainda não tem conta? <a href="#">Criar conta grátis</a>
+        </div>
     </div>
 
-    <form id="loginForm" onsubmit="handleLogin(event)">
+    <script>
+        function handleLogin(event) {
+            // Previne o recarregamento da página (comportamento padrão do form)
+            event.preventDefault();
 
-        <div class="form-group">
-            <label for="email">E-mail Corporativo</label>
-            <input type="email" id="email" placeholder="dev@exemplo.com" required>
-            <div class="error-message" id="emailError">Insira um e-mail válido.</div>
-        </div>
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
 
-        <div class="form-group">
-            <label for="password">Palavra-passe</label>
-            <input type="password" id="password" placeholder="••••••••" required minlength="6">
-            <div class="error-message" id="passwordError">A palavra-passe deve ter pelo menos 6 caracteres.</div>
-        </div>
+            // Lógica de validação básica
+            let isValid = true;
 
-        <div class="options">
-            <label class="checkbox-container">
-                <input type="checkbox" id="remember"> Manter sessão iniciada
-            </label>
-            <a href="#" class="forgot-password">Esqueceu a senha?</a>
-        </div>
+            if (!emailInput.value.includes('@')) {
+                emailInput.classList.add('is-invalid');
+                document.getElementById('emailError').style.display = 'block';
+                isValid = false;
+            } else {
+                emailInput.classList.remove('is-invalid');
+                document.getElementById('emailError').style.display = 'none';
+            }
 
-        <button type="submit" class="btn-primary" id="submitBtn">
-            <span id="btnText">Entrar na Plataforma</span>
-            <span class="spinner" id="btnSpinner"></span>
-        </button>
+            if (passwordInput.value.length < 6) {
+                passwordInput.classList.add('is-invalid');
+                document.getElementById('passwordError').style.display = 'block';
+                isValid = false;
+            } else {
+                passwordInput.classList.remove('is-invalid');
+                document.getElementById('passwordError').style.display = 'none';
+            }
 
-    </form>
+            // Se for válido, simula a chamada à API
+            if (isValid) {
+                // Estado de carregamento
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnSpinner.style.display = 'block';
 
-    <div class="register-prompt">
-        Ainda não tem conta? <a href="#">Criar conta grátis</a>
-    </div>
-</div>
+                // Simula o tempo de resposta do servidor (Spring Boot)
+                setTimeout(() => {
+                    // Restaura o botão
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'block';
+                    btnSpinner.style.display = 'none';
 
-<script>
-    function handleLogin(event) {
-        // Previne o recarregamento da página (comportamento padrão do form)
-        event.preventDefault();
+                    // Mostra uma mensagem na tela (já que não podemos usar alert no iframe)
+                    showMessage('Login efetuado com sucesso! Redirecionando para o Dashboard...', 'success');
 
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-        const btnSpinner = document.getElementById('btnSpinner');
+                    // Limpa o formulário
+                    document.getElementById('loginForm').reset();
+                }, 2000);
+            }
+        }
 
-        // Lógica de validação básica
-        let isValid = true;
+        // Função auxiliar para mostrar mensagens sem usar 'alert()'
+        function showMessage(msg, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = msg;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.right = '20px';
+            messageDiv.style.padding = '16px 24px';
+            messageDiv.style.backgroundColor = type === 'success' ? 'var(--primary-color)' : 'var(--error-color)';
+            messageDiv.style.color = 'white';
+            messageDiv.style.borderRadius = '8px';
+            messageDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            messageDiv.style.fontWeight = '500';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.transition = 'opacity 0.3s ease';
 
-        if (!emailInput.value.includes('@')) {
-            emailInput.classList.add('is-invalid');
-            document.getElementById('emailError').style.display = 'block';
-            isValid = false;
-        } else {
-            emailInput.classList.remove('is-invalid');
+            document.body.appendChild(messageDiv);
+
+            // Remove a mensagem após 3 segundos
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+
+        // Limpa validação ao digitar
+        document.getElementById('email').addEventListener('input', function() {
+            this.classList.remove('is-invalid');
             document.getElementById('emailError').style.display = 'none';
-        }
+        });
 
-        if (passwordInput.value.length < 6) {
-            passwordInput.classList.add('is-invalid');
-            document.getElementById('passwordError').style.display = 'block';
-            isValid = false;
-        } else {
-            passwordInput.classList.remove('is-invalid');
+        document.getElementById('password').addEventListener('input', function() {
+            this.classList.remove('is-invalid');
             document.getElementById('passwordError').style.display = 'none';
-        }
-
-        // Se for válido, simula a chamada à API
-        if (isValid) {
-            // Estado de carregamento
-            submitBtn.disabled = true;
-            btnText.style.display = 'none';
-            btnSpinner.style.display = 'block';
-
-            // Simula o tempo de resposta do servidor (Spring Boot)
-            setTimeout(() => {
-                // Restaura o botão
-                submitBtn.disabled = false;
-                btnText.style.display = 'block';
-                btnSpinner.style.display = 'none';
-
-                // Mostra uma mensagem na tela (já que não podemos usar alert no iframe)
-                showMessage('Login efetuado com sucesso! Redirecionando para o Dashboard...', 'success');
-
-                // Limpa o formulário
-                document.getElementById('loginForm').reset();
-            }, 2000);
-        }
-    }
-
-    // Função auxiliar para mostrar mensagens sem usar 'alert()'
-    function showMessage(msg, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = msg;
-        messageDiv.style.position = 'fixed';
-        messageDiv.style.top = '20px';
-        messageDiv.style.right = '20px';
-        messageDiv.style.padding = '16px 24px';
-        messageDiv.style.backgroundColor = type === 'success' ? 'var(--primary-color)' : 'var(--error-color)';
-        messageDiv.style.color = 'white';
-        messageDiv.style.borderRadius = '8px';
-        messageDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        messageDiv.style.fontWeight = '500';
-        messageDiv.style.zIndex = '1000';
-        messageDiv.style.transition = 'opacity 0.3s ease';
-
-        document.body.appendChild(messageDiv);
-
-        // Remove a mensagem após 3 segundos
-        setTimeout(() => {
-            messageDiv.style.opacity = '0';
-            setTimeout(() => {
-                document.body.removeChild(messageDiv);
-            }, 300);
-        }, 3000);
-    }
-
-    // Limpa validação ao digitar
-    document.getElementById('email').addEventListener('input', function() {
-        this.classList.remove('is-invalid');
-        document.getElementById('emailError').style.display = 'none';
-    });
-
-    document.getElementById('password').addEventListener('input', function() {
-        this.classList.remove('is-invalid');
-        document.getElementById('passwordError').style.display = 'none';
-    });
-</script>
+        });
+    </script>
 </body>
 </html>
