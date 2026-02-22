@@ -1,3 +1,24 @@
+# IntelliJ / JetBrains
+.idea/
+
+# Node / Angular
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.angular/
+coverage/
+
+# Java / Spring / Maven
+target/
+**/target/
+*.class
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Angular specific
 /dist/
 /out-tsc/
