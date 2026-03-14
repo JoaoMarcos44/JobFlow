@@ -371,8 +371,8 @@
 
           showMessage('Login efetuado com sucesso! Redirecionando para o Dashboard...', 'success');
 
-          // Optional: redirect
-          // window.location.href = '/dashboard.html';
+          // Redireciona para o dashboard interno estático após login bem-sucedido
+          window.location.href = '/dashboard.html';
 
           document.getElementById('loginForm').reset();
         } catch (err) {
