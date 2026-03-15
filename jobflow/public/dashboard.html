@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JobFlow - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
     <style>
         /* Reset e Variáveis baseadas no tema JobFlow */
         * {
@@ -118,9 +120,16 @@
             height: 20px;
         }
 
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+        .sidebar-footer .nav-item {
+            margin-bottom: 4px;
+        }
         .user-profile-wrap {
             position: relative;
-            margin-top: auto;
         }
         .user-profile {
             padding: 16px 24px;
@@ -535,6 +544,98 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
         }
+        /* Dashboard Analytics view - tema escuro (igual ao site) */
+        #view-analytics {
+            background: var(--bg-dark);
+            padding: 24px 32px;
+            min-height: 100%;
+        }
+        #view-analytics .analytics-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        #view-analytics .analytics-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        #view-analytics .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        @media (max-width: 900px) {
+            #view-analytics .analytics-grid { grid-template-columns: 1fr; }
+        }
+        #view-analytics .analytics-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+        #view-analytics .analytics-card h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        #view-analytics .analytics-card .analytics-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 16px;
+        }
+        #view-analytics .analytics-card .chart-container {
+            position: relative;
+            height: 220px;
+        }
+        /* Setup dropdown no topbar */
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .setup-wrap {
+            position: relative;
+        }
+        .setup-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            min-width: 180px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            z-index: 50;
+            overflow: hidden;
+        }
+        .setup-dropdown.show { display: block; }
+        .setup-dropdown a, .setup-dropdown button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            color: var(--text-main);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+        }
+        .setup-dropdown a:hover, .setup-dropdown button:hover {
+            background: var(--bg-hover);
+        }
+
         body.theme-light { --bg-dark: #f1f5f9; --bg-panel: #e2e8f0; --bg-card: #fff; --bg-hover: #cbd5e1; --primary: #0891b2; --primary-hover: #0e7490; --text-main: #0f172a; --text-muted: #475569; --border-color: #cbd5e1; }
         body.theme-light .brand h1 { background: linear-gradient(to right, #0f172a, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
@@ -563,7 +664,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                 Candidaturas
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" id="nav-analytics" data-view="analytics">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 Analytics
             </a>
@@ -573,14 +674,12 @@
             </a>
         </nav>
 
-        <nav class="nav-menu" style="margin-top: 20px;">
+        <div class="sidebar-footer">
             <a href="#" class="nav-item" id="nav-definicoes" data-view="definicoes">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 Definições
             </a>
-        </nav>
-
-        <div class="user-profile-wrap">
+            <div class="user-profile-wrap">
             <div class="user-profile-dropdown" id="user-profile-dropdown">
                 <button type="button" class="logout" id="btn-logout">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -593,6 +692,7 @@
                     <h4 id="user-name">Carregando...</h4>
                     <p id="user-role">—</p>
                 </div>
+            </div>
             </div>
         </div>
     </aside>
@@ -607,6 +707,18 @@
             </div>
 
             <div class="topbar-actions">
+                <button class="btn-icon" id="btn-email" title="E-mail">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </button>
+                <div class="setup-wrap">
+                    <button type="button" class="btn-icon" id="btn-setup" title="Setup">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                    <div class="setup-dropdown" id="setup-dropdown">
+                        <button type="button">Configurações gerais</button>
+                        <button type="button">Preferências</button>
+                    </div>
+                </div>
                 <button class="btn-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 </button>
@@ -710,6 +822,30 @@
             </div>
         </div>
 
+        <!-- Vista: Dashboard Analytics -->
+        <div id="view-analytics" class="view-panel" style="display: none;">
+            <div class="analytics-header">
+                <h2>Dashboard Analytics</h2>
+            </div>
+            <div class="analytics-grid" id="analytics-grid">
+                <div class="analytics-card" id="analytics-card-enviados">
+                    <h3>Currículos Enviados</h3>
+                    <div class="analytics-value" id="analytics-total-enviados">24</div>
+                    <div class="chart-container"><canvas id="chart-enviados"></canvas></div>
+                </div>
+                <div class="analytics-card" id="analytics-card-recebidos">
+                    <h3>Currículos Recebidos por Fonte</h3>
+                    <div class="analytics-value" id="analytics-total-recebidos">100%</div>
+                    <div class="chart-container"><canvas id="chart-recebidos"></canvas></div>
+                </div>
+                <div class="analytics-card" id="analytics-card-resultados">
+                    <h3>Resultados ao Longo do Tempo</h3>
+                    <div class="analytics-value" id="analytics-total-resultados">—</div>
+                    <div class="chart-container"><canvas id="chart-resultados"></canvas></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Vista: Definições (configurações do utilizador) -->
         <div id="view-definicoes" class="view-panel" style="display: none;">
             <div class="board-header">
@@ -789,31 +925,90 @@
                 const viewFeed = document.getElementById('view-feed');
                 const viewCandidaturas = document.getElementById('view-candidaturas');
                 const viewCurriculos = document.getElementById('view-curriculos');
+                const viewAnalytics = document.getElementById('view-analytics');
                 const viewDefinicoes = document.getElementById('view-definicoes');
                 const navFeed = document.getElementById('nav-feed');
                 const navCandidaturas = document.getElementById('nav-candidaturas');
                 const navCurriculos = document.getElementById('nav-curriculos');
+                const navAnalytics = document.getElementById('nav-analytics');
                 const navDefinicoes = document.getElementById('nav-definicoes');
                 const feedCards = document.getElementById('feed-cards');
                 const colApplied = document.getElementById('col-applied-content');
                 const colInterview = document.getElementById('col-interview-content');
                 const colOffer = document.getElementById('col-offer-content');
 
+                let analyticsCharts = [];
                 function showView(viewName) {
                     viewFeed.style.display = viewName === 'feed' ? 'block' : 'none';
                     viewCandidaturas.style.display = viewName === 'candidaturas' ? 'block' : 'none';
                     viewCurriculos.style.display = viewName === 'curriculos' ? 'block' : 'none';
+                    viewAnalytics.style.display = viewName === 'analytics' ? 'block' : 'none';
                     viewDefinicoes.style.display = viewName === 'definicoes' ? 'block' : 'none';
                     navFeed.classList.toggle('active', viewName === 'feed');
                     navCandidaturas.classList.toggle('active', viewName === 'candidaturas');
                     navCurriculos.classList.toggle('active', viewName === 'curriculos');
+                    navAnalytics.classList.toggle('active', viewName === 'analytics');
                     navDefinicoes.classList.toggle('active', viewName === 'definicoes');
                     if (viewName === 'curriculos') loadResumes();
+                    if (viewName === 'analytics') {
+                        initAnalyticsCharts();
+                    } else {
+                        analyticsCharts.forEach(c => { if (c) c.destroy(); });
+                        analyticsCharts = [];
+                    }
+                }
+                function initAnalyticsCharts() {
+                    analyticsCharts.forEach(c => { if (c) c.destroy(); });
+                    analyticsCharts = [];
+                    var enviadosCtx = document.getElementById('chart-enviados');
+                    if (enviadosCtx) {
+                        var c1 = new Chart(enviadosCtx.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                                datasets: [{ label: 'Enviados', data: [3, 5, 4, 6, 2, 3, 1], backgroundColor: 'rgba(6, 182, 212, 0.7)', borderColor: '#06b6d4', borderWidth: 1 }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                        });
+                        analyticsCharts.push(c1);
+                    }
+                    var recebidosCtx = document.getElementById('chart-recebidos');
+                    if (recebidosCtx) {
+                        var c2 = new Chart(recebidosCtx.getContext('2d'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Site', 'Indicação', 'LinkedIn'],
+                                datasets: [{ data: [40, 35, 25], backgroundColor: ['#06b6d4', '#10b981', '#f59e0b'], borderWidth: 0 }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                        analyticsCharts.push(c2);
+                    }
+                    var resultadosCtx = document.getElementById('chart-resultados');
+                    if (resultadosCtx) {
+                        var c3 = new Chart(resultadosCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'],
+                                datasets: [
+                                    { label: 'Entrevistas', data: [2, 4, 3, 6, 5, 7], borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', fill: true, tension: 0.3 },
+                                    { label: 'Propostas', data: [0, 1, 2, 2, 4, 3], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 },
+                                    { label: 'Contratações', data: [0, 0, 1, 1, 1, 2], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.3 }
+                                ]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                        });
+                        analyticsCharts.push(c3);
+                    }
                 }
                 navFeed.addEventListener('click', (e) => { e.preventDefault(); showView('feed'); });
                 navCandidaturas.addEventListener('click', (e) => { e.preventDefault(); showView('candidaturas'); });
                 navCurriculos.addEventListener('click', (e) => { e.preventDefault(); showView('curriculos'); });
+                navAnalytics.addEventListener('click', (e) => { e.preventDefault(); showView('analytics'); });
                 navDefinicoes.addEventListener('click', (e) => { e.preventDefault(); showView('definicoes'); });
+                document.getElementById('btn-setup').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('setup-dropdown').classList.toggle('show'); });
+                document.addEventListener('click', function() { document.getElementById('setup-dropdown').classList.remove('show'); });
+                document.getElementById('setup-dropdown').addEventListener('click', (e) => e.stopPropagation());
 
                 if (localStorage.getItem('theme') === 'light') document.body.classList.add('theme-light');
                 document.getElementById('theme-light').checked = document.body.classList.contains('theme-light');

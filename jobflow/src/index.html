@@ -49,6 +49,17 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             position: relative;
             overflow: hidden;
+            animation: login-entrance 0.8s cubic-bezier(0.33, 1, 0.68, 1) both;
+        }
+        @keyframes login-entrance {
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         /* Linha brilhante no topo do card */
