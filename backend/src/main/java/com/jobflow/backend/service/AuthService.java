@@ -6,6 +6,7 @@ import com.jobflow.backend.model.User;
 import com.jobflow.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -20,13 +21,15 @@ public class AuthService {
         this.jwt = jwt;
     }
 
+    @Transactional
     public String register(RegisterRequest req) {
         String email = normalizeEmail(req.email());
-
+        if (email.isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
         if (users.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException("Email already in use");
         }
-
         User user = new User(email, encoder.encode(req.password()));
         users.save(user);
         return jwt.issueToken(user);

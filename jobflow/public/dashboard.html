@@ -118,14 +118,67 @@
             height: 20px;
         }
 
+        .user-profile-wrap {
+            position: relative;
+            margin-top: auto;
+        }
         .user-profile {
             padding: 16px 24px;
             border-top: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-top: auto;
             cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .user-profile:hover {
+            background-color: var(--bg-card);
+        }
+        .user-profile-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 12px;
+            right: 12px;
+            margin-bottom: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 100;
+        }
+        .user-profile-dropdown.show {
+            display: block;
+        }
+        .user-profile-dropdown a,
+        .user-profile-dropdown button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            color: var(--text-main);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+        }
+        .user-profile-dropdown a:hover,
+        .user-profile-dropdown button:hover {
+            background-color: var(--bg-hover);
+        }
+        .user-profile-dropdown button.logout {
+            color: #f87171;
+        }
+        .user-profile-dropdown svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
         }
 
         .avatar {
@@ -371,6 +424,12 @@
         .kanban-card:active {
             cursor: grabbing;
         }
+        #view-candidaturas .kanban-card {
+            cursor: grab;
+        }
+        #view-candidaturas .kanban-card:active {
+            cursor: grabbing;
+        }
 
         .kanban-card.dragging {
             opacity: 0.5;
@@ -476,6 +535,8 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
         }
+        body.theme-light { --bg-dark: #f1f5f9; --bg-panel: #e2e8f0; --bg-card: #fff; --bg-hover: #cbd5e1; --primary: #0891b2; --primary-hover: #0e7490; --text-main: #0f172a; --text-muted: #475569; --border-color: #cbd5e1; }
+        body.theme-light .brand h1 { background: linear-gradient(to right, #0f172a, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body>
@@ -494,11 +555,11 @@
         </div>
 
         <nav class="nav-menu">
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" id="nav-feed" data-view="feed">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-                Dashboard
+                Feed de Vagas
             </a>
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item active" id="nav-candidaturas" data-view="candidaturas">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                 Candidaturas
             </a>
@@ -506,24 +567,32 @@
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 Analytics
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" id="nav-curriculos" data-view="curriculos">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 Currículos
             </a>
         </nav>
 
         <nav class="nav-menu" style="margin-top: 20px;">
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" id="nav-definicoes" data-view="definicoes">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 Definições
             </a>
         </nav>
 
-        <div class="user-profile">
-            <div class="avatar">JM</div>
-            <div class="user-info">
-                <h4>João Marcos</h4>
-                <p>Desenvolvedor Full Stack</p>
+        <div class="user-profile-wrap">
+            <div class="user-profile-dropdown" id="user-profile-dropdown">
+                <button type="button" class="logout" id="btn-logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Sair
+                </button>
+            </div>
+            <div class="user-profile" id="user-profile-btn">
+                <div class="avatar" id="user-avatar">JM</div>
+                <div class="user-info">
+                    <h4 id="user-name">Carregando...</h4>
+                    <p id="user-role">—</p>
+                </div>
             </div>
         </div>
     </aside>
@@ -552,6 +621,18 @@
             </div>
         </header>
 
+        <!-- Vista: Feed de Vagas -->
+        <div id="view-feed" class="view-panel" style="display: none;">
+            <div class="board-header">
+                <h2>Feed de Vagas</h2>
+            </div>
+            <div class="kanban-board" style="flex-wrap: wrap; align-content: flex-start;">
+                <div id="feed-cards" style="display: flex; flex-wrap: wrap; gap: 16px; padding: 24px 32px;"></div>
+            </div>
+        </div>
+
+        <!-- Vista: Gestão de Candidaturas (Kanban) -->
+        <div id="view-candidaturas" class="view-panel">
         <div class="board-header">
             <h2>Gestão de Candidaturas</h2>
         </div>
@@ -566,59 +647,10 @@
                         <span class="dot"></span>
                         Aplicado
                     </div>
-                    <span class="column-count" id="count-applied">2</span>
+                    <span class="column-count" id="count-applied">0</span>
                 </div>
                 <!-- Zona onde os cartões são largados (Dropzone) -->
-                <div class="column-content" id="col-applied-content">
-
-                    <!-- Card 1 -->
-                    <div class="kanban-card" draggable="true" id="card-1">
-                        <div class="card-company">
-                            <div class="company-logo" style="color: #0ea5e9;">G</div>
-                            <span class="company-name">Gupy (via Extensão JobFlow)</span>
-                        </div>
-                        <h3 class="card-title">Desenvolvedor Frontend Angular Pleno</h3>
-                        <div class="card-tags">
-                            <span class="tag match">Angular</span>
-                            <span class="tag match">TypeScript</span>
-                            <span class="tag">RxJS</span>
-                        </div>
-                        <div class="card-footer">
-                            <div class="card-date">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Há 2 dias
-                            </div>
-                            <div class="match-score">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                                92% Match
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card 2 -->
-                    <div class="kanban-card" draggable="true" id="card-2">
-                        <div class="card-company">
-                            <div class="company-logo" style="color: #0077b5;">in</div>
-                            <span class="company-name">LinkedIn (via API Oficial)</span>
-                        </div>
-                        <h3 class="card-title">Full Stack Engineer (Java/Angular)</h3>
-                        <div class="card-tags">
-                            <span class="tag match">Java</span>
-                            <span class="tag match">Spring Boot</span>
-                            <span class="tag match">Angular</span>
-                        </div>
-                        <div class="card-footer">
-                            <div class="card-date">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                Hoje
-                            </div>
-                            <div class="match-score">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                                98% Match
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="column-content" id="col-applied-content" data-status="saved">
                 </div>
             </div>
 
@@ -629,30 +661,9 @@
                         <span class="dot"></span>
                         Entrevista / Teste
                     </div>
-                    <span class="column-count" id="count-interview">1</span>
+                    <span class="column-count" id="count-interview">0</span>
                 </div>
-                <div class="column-content" id="col-interview-content">
-
-                    <!-- Card 3 -->
-                    <div class="kanban-card" draggable="true" id="card-3">
-                        <div class="card-company">
-                            <div class="company-logo" style="color: #e11d48;">N</div>
-                            <span class="company-name">Nubank (via Portal)</span>
-                        </div>
-                        <h3 class="card-title">Software Engineer - Backend</h3>
-                        <div class="card-tags">
-                            <span class="tag match">Java</span>
-                            <span class="tag">PostgreSQL</span>
-                            <span class="tag">Kafka</span>
-                        </div>
-                        <div class="card-footer">
-                            <div class="card-date">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                Teste em 3 dias
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="column-content" id="col-interview-content" data-status="applied">
                 </div>
             </div>
 
@@ -665,75 +676,489 @@
                     </div>
                     <span class="column-count" id="count-offer">0</span>
                 </div>
-                <div class="column-content" id="col-offer-content">
-                    <!-- Coluna inicialmente vazia -->
+                <div class="column-content" id="col-offer-content" data-status="offer">
                 </div>
             </div>
 
         </div>
+        </div>
+
+        <!-- Vista: Currículos (upload PDF/DOCX) -->
+        <div id="view-curriculos" class="view-panel" style="display: none;">
+            <div class="board-header">
+                <h2>Currículos</h2>
+            </div>
+            <div style="padding: 24px 32px; max-width: 560px;">
+                <p style="color: var(--text-muted); margin-bottom: 24px;">Envie o seu currículo em PDF ou DOCX para guardar no site.</p>
+                <form id="form-resume-upload" style="margin-bottom: 32px;">
+                    <div style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 16px; background: var(--bg-card);">
+                        <input type="file" id="resume-file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display: none;">
+                        <label for="resume-file" style="cursor: pointer; display: block;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="margin: 0 auto 12px; display: block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <span style="color: var(--primary); font-weight: 600;">Clique para escolher ficheiro</span>
+                            <span style="color: var(--text-muted); font-size: 14px; display: block; margin-top: 4px;">PDF ou DOCX (máx. 10 MB)</span>
+                        </label>
+                        <p id="resume-file-name" style="margin-top: 12px; font-size: 14px; color: var(--text-muted);"></p>
+                    </div>
+                    <button type="submit" class="btn-primary" id="btn-upload-resume" disabled>
+                        Guardar currículo
+                    </button>
+                    <p id="msg-resume" style="font-size: 13px; margin-top: 8px; color: var(--text-muted); display: none;"></p>
+                </form>
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-muted);">Os meus currículos</h3>
+                <ul id="resume-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+            </div>
+        </div>
+
+        <!-- Vista: Definições (configurações do utilizador) -->
+        <div id="view-definicoes" class="view-panel" style="display: none;">
+            <div class="board-header">
+                <h2>Definições</h2>
+            </div>
+            <div style="padding: 24px 32px; max-width: 480px;">
+                <div class="settings-section" style="margin-bottom: 32px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-muted);">Alterar palavra-passe</h3>
+                    <form id="form-password" class="settings-form">
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="current-password" style="display:block;color:var(--text-muted);font-size:14px;margin-bottom:6px;">Palavra-passe atual</label>
+                            <input type="password" id="current-password" class="search-input" placeholder="••••••••" required minlength="6" style="width:100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="new-password" style="display:block;color:var(--text-muted);font-size:14px;margin-bottom:6px;">Nova palavra-passe</label>
+                            <input type="password" id="new-password" class="search-input" placeholder="••••••••" required minlength="8" style="width:100%;">
+                        </div>
+                        <button type="submit" class="btn-primary">Atualizar palavra-passe</button>
+                        <p id="msg-password" style="font-size:13px;margin-top:8px;color:var(--text-muted);display:none;"></p>
+                    </form>
+                </div>
+                <div class="settings-section" style="margin-bottom: 32px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-muted);">Alterar e-mail</h3>
+                    <form id="form-email" class="settings-form">
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="new-email" style="display:block;color:var(--text-muted);font-size:14px;margin-bottom:6px;">Novo e-mail</label>
+                            <input type="email" id="new-email" class="search-input" placeholder="novo@email.com" required style="width:100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="email-password" style="display:block;color:var(--text-muted);font-size:14px;margin-bottom:6px;">Palavra-passe (confirmar)</label>
+                            <input type="password" id="email-password" class="search-input" placeholder="••••••••" required style="width:100%;">
+                        </div>
+                        <button type="submit" class="btn-primary">Atualizar e-mail</button>
+                        <p id="msg-email" style="font-size:13px;margin-top:8px;color:var(--text-muted);display:none;"></p>
+                    </form>
+                </div>
+                <div class="settings-section">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-muted);">Aparência</h3>
+                    <label class="checkbox-container" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                        <input type="checkbox" id="theme-light" style="accent-color: var(--primary); width: 18px; height: 18px;">
+                        <span>Modo claro</span>
+                    </label>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- Lógica de Drag and Drop em JavaScript -->
+    <!-- Modal detalhe da vaga -->
+    <div id="job-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center;">
+        <div class="kanban-card" style="max-width: 480px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <h3 id="modal-title" style="font-size: 18px;"></h3>
+                <button type="button" id="modal-close" class="btn-icon" style="padding: 4px;">✕</button>
+            </div>
+            <p id="modal-company" class="company-name" style="margin-bottom: 12px;"></p>
+            <div id="modal-tags" class="card-tags" style="margin-bottom: 12px;"></div>
+            <p id="modal-match" class="match-score" style="margin-bottom: 12px;"></p>
+            <p id="modal-analysis" style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;"></p>
+            <button type="button" id="modal-add-candidaturas" class="btn-primary">Adicionar a Candidaturas</button>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.kanban-card');
-            const dropzones = document.querySelectorAll('.column-content');
-
-            function updateCounts() {
-                document.getElementById('count-applied').textContent = document.getElementById('col-applied-content').children.length;
-                document.getElementById('count-interview').textContent = document.getElementById('col-interview-content').children.length;
-                document.getElementById('count-offer').textContent = document.getElementById('col-offer-content').children.length;
+        (function() {
+            const TOKEN_KEY = 'auth_token';
+            function getToken() { return localStorage.getItem(TOKEN_KEY); }
+            function api(url, opts) {
+                const token = getToken();
+                const headers = { 'Content-Type': 'application/json', ...(opts && opts.headers) };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+                return fetch(url, { ...opts, headers }).then(r => { if (r.status === 401) { localStorage.removeItem(TOKEN_KEY); location.href = '/'; throw new Error('Unauthorized'); } return r; });
             }
 
-            cards.forEach(card => {
-                card.addEventListener('dragstart', () => {
-                    card.classList.add('dragging');
+            document.addEventListener('DOMContentLoaded', async () => {
+                if (!getToken()) { location.href = '/'; return; }
+
+                const viewFeed = document.getElementById('view-feed');
+                const viewCandidaturas = document.getElementById('view-candidaturas');
+                const viewCurriculos = document.getElementById('view-curriculos');
+                const viewDefinicoes = document.getElementById('view-definicoes');
+                const navFeed = document.getElementById('nav-feed');
+                const navCandidaturas = document.getElementById('nav-candidaturas');
+                const navCurriculos = document.getElementById('nav-curriculos');
+                const navDefinicoes = document.getElementById('nav-definicoes');
+                const feedCards = document.getElementById('feed-cards');
+                const colApplied = document.getElementById('col-applied-content');
+                const colInterview = document.getElementById('col-interview-content');
+                const colOffer = document.getElementById('col-offer-content');
+
+                function showView(viewName) {
+                    viewFeed.style.display = viewName === 'feed' ? 'block' : 'none';
+                    viewCandidaturas.style.display = viewName === 'candidaturas' ? 'block' : 'none';
+                    viewCurriculos.style.display = viewName === 'curriculos' ? 'block' : 'none';
+                    viewDefinicoes.style.display = viewName === 'definicoes' ? 'block' : 'none';
+                    navFeed.classList.toggle('active', viewName === 'feed');
+                    navCandidaturas.classList.toggle('active', viewName === 'candidaturas');
+                    navCurriculos.classList.toggle('active', viewName === 'curriculos');
+                    navDefinicoes.classList.toggle('active', viewName === 'definicoes');
+                    if (viewName === 'curriculos') loadResumes();
+                }
+                navFeed.addEventListener('click', (e) => { e.preventDefault(); showView('feed'); });
+                navCandidaturas.addEventListener('click', (e) => { e.preventDefault(); showView('candidaturas'); });
+                navCurriculos.addEventListener('click', (e) => { e.preventDefault(); showView('curriculos'); });
+                navDefinicoes.addEventListener('click', (e) => { e.preventDefault(); showView('definicoes'); });
+
+                if (localStorage.getItem('theme') === 'light') document.body.classList.add('theme-light');
+                document.getElementById('theme-light').checked = document.body.classList.contains('theme-light');
+                document.getElementById('theme-light').addEventListener('change', function() {
+                    if (this.checked) { document.body.classList.add('theme-light'); localStorage.setItem('theme', 'light'); }
+                    else { document.body.classList.remove('theme-light'); localStorage.setItem('theme', 'dark'); }
                 });
 
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                    updateCounts();
+                const userProfileBtn = document.getElementById('user-profile-btn');
+                const userProfileDropdown = document.getElementById('user-profile-dropdown');
+                const btnLogout = document.getElementById('btn-logout');
+                userProfileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userProfileDropdown.classList.toggle('show');
                 });
-            });
+                document.addEventListener('click', () => userProfileDropdown.classList.remove('show'));
+                userProfileDropdown.addEventListener('click', (e) => e.stopPropagation());
+                btnLogout.addEventListener('click', () => {
+                    localStorage.removeItem(TOKEN_KEY);
+                    location.href = '/';
+                });
 
-            dropzones.forEach(zone => {
-                zone.addEventListener('dragover', e => {
+                const resumeFileInput = document.getElementById('resume-file');
+                const resumeFileNameEl = document.getElementById('resume-file-name');
+                const btnUploadResume = document.getElementById('btn-upload-resume');
+                const formResumeUpload = document.getElementById('form-resume-upload');
+                const msgResume = document.getElementById('msg-resume');
+                const resumeList = document.getElementById('resume-list');
+                resumeFileInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        resumeFileNameEl.textContent = file.name;
+                        btnUploadResume.disabled = false;
+                    } else {
+                        resumeFileNameEl.textContent = '';
+                        btnUploadResume.disabled = true;
+                    }
+                    msgResume.style.display = 'none';
+                });
+                formResumeUpload.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    zone.classList.add('drag-over');
-
-                    const draggingCard = document.querySelector('.dragging');
-                    const afterElement = getDragAfterElement(zone, e.clientY);
-
-                    if (afterElement == null) {
-                        zone.appendChild(draggingCard);
-                    } else {
-                        zone.insertBefore(draggingCard, afterElement);
+                    const file = resumeFileInput.files[0];
+                    if (!file) { msgResume.textContent = 'Selecione um ficheiro PDF ou DOCX.'; msgResume.style.display = 'block'; msgResume.style.color = 'var(--primary)'; return; }
+                    btnUploadResume.disabled = true;
+                    msgResume.style.display = 'block';
+                    msgResume.style.color = 'var(--text-muted)';
+                    msgResume.textContent = 'A guardar...';
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        const token = getToken();
+                        const res = await fetch('/api/resumes', {
+                            method: 'POST',
+                            headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+                            body: formData
+                        });
+                        if (res.status === 401) { localStorage.removeItem(TOKEN_KEY); location.href = '/'; return; }
+                        if (!res.ok) {
+                            if (res.status === 413) throw new Error('Ficheiro demasiado grande. Máximo 10 MB.');
+                            const err = await res.json().catch(() => ({}));
+                            throw new Error(err.error || ('Erro ao guardar currículo (HTTP ' + res.status + ').'));
+                        }
+                        msgResume.textContent = 'Currículo guardado com sucesso.';
+                        msgResume.style.color = 'var(--status-offer)';
+                        resumeFileInput.value = '';
+                        resumeFileNameEl.textContent = '';
+                        loadResumes();
+                    } catch (err) {
+                        msgResume.textContent = err.message || 'Erro ao guardar.';
+                        msgResume.style.color = '#f87171';
                     }
+                    btnUploadResume.disabled = true;
+                });
+                async function loadResumes() {
+                    resumeList.innerHTML = '';
+                    try {
+                        const res = await api('/api/resumes');
+                        if (!res.ok) return;
+                        const list = await res.json();
+                        if (!Array.isArray(list) || list.length === 0) {
+                            resumeList.innerHTML = '<li style="color: var(--text-muted); padding: 12px 0;">Ainda não guardou nenhum currículo.</li>';
+                            return;
+                        }
+                        list.forEach(r => {
+                            const li = document.createElement('li');
+                            li.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color);';
+                            const a = document.createElement('a');
+                            a.href = '/api/resumes/' + r.id;
+                            a.download = r.fileName || 'curriculo';
+                            a.style.cssText = 'color: var(--primary); text-decoration: none; font-weight: 500;';
+                            a.textContent = r.fileName || 'Currículo';
+                            a.addEventListener('click', async (e) => {
+                                e.preventDefault();
+                                try {
+                                    const res = await api('/api/resumes/' + r.id);
+                                    if (!res.ok) return;
+                                    const blob = await res.blob();
+                                    const url = URL.createObjectURL(blob);
+                                    const d = document.createElement('a');
+                                    d.href = url;
+                                    d.download = r.fileName || 'curriculo';
+                                    d.click();
+                                    URL.revokeObjectURL(url);
+                                } catch (_) {}
+                            });
+                            const span = document.createElement('span');
+                            span.style.cssText = 'font-size: 12px; color: var(--text-muted);';
+                            span.textContent = new Date(r.createdAt).toLocaleDateString('pt-PT');
+                            const delBtn = document.createElement('button');
+                            delBtn.type = 'button';
+                            delBtn.className = 'btn-icon';
+                            delBtn.style.cssText = 'padding: 6px; color: var(--text-muted);';
+                            delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+                            delBtn.title = 'Remover';
+                            delBtn.addEventListener('click', async () => {
+                                if (!confirm('Remover este currículo?')) return;
+                                try {
+                                    const delRes = await api('/api/resumes/' + r.id, { method: 'DELETE' });
+                                    if (delRes.status === 204) { li.remove(); }
+                                } catch (_) {}
+                            });
+                            li.appendChild(a);
+                            li.appendChild(span);
+                            li.appendChild(delBtn);
+                            resumeList.appendChild(li);
+                        });
+                    } catch (_) {}
+                }
+
+                document.getElementById('form-password').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const msg = document.getElementById('msg-password');
+                    try {
+                        const res = await api('/api/users/password', { method: 'PUT', body: JSON.stringify({ currentPassword: document.getElementById('current-password').value, newPassword: document.getElementById('new-password').value }) });
+                        if (res.ok) { msg.style.color = 'var(--status-offer)'; msg.textContent = 'Palavra-passe atualizada.'; msg.style.display = 'block'; e.target.reset(); }
+                        else { msg.style.color = 'var(--status-rejected)'; msg.textContent = 'Palavra-passe atual incorreta.'; msg.style.display = 'block'; }
+                    } catch (_) { msg.style.color = 'var(--status-rejected)'; msg.textContent = 'Erro ao atualizar.'; msg.style.display = 'block'; }
+                });
+                document.getElementById('form-email').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const msg = document.getElementById('msg-email');
+                    try {
+                        const res = await api('/api/users/email', { method: 'PUT', body: JSON.stringify({ newEmail: document.getElementById('new-email').value, password: document.getElementById('email-password').value }) });
+                        if (res.ok) { msg.style.color = 'var(--status-offer)'; msg.textContent = 'E-mail atualizado. Faça login novamente com o novo e-mail.'; msg.style.display = 'block'; e.target.reset(); }
+                        else { msg.style.color = 'var(--status-rejected)'; msg.textContent = 'E-mail já em uso ou palavra-passe incorreta.'; msg.style.display = 'block'; }
+                    } catch (_) { msg.style.color = 'var(--status-rejected)'; msg.textContent = 'Erro ao atualizar.'; msg.style.display = 'block'; }
                 });
 
-                zone.addEventListener('dragleave', () => {
-                    zone.classList.remove('drag-over');
+                const jobModal = document.getElementById('job-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const modalCompany = document.getElementById('modal-company');
+                const modalTags = document.getElementById('modal-tags');
+                const modalMatch = document.getElementById('modal-match');
+                const modalAnalysis = document.getElementById('modal-analysis');
+                const modalAddBtn = document.getElementById('modal-add-candidaturas');
+                document.getElementById('modal-close').addEventListener('click', () => { jobModal.style.display = 'none'; });
+                jobModal.addEventListener('click', (e) => { if (e.target === jobModal) jobModal.style.display = 'none'; });
+
+                try {
+                    const profileRes = await api('/api/auth/me');
+                    if (profileRes.ok) {
+                        const p = await profileRes.json();
+                        document.getElementById('user-name').textContent = p.name || p.email || 'Utilizador';
+                        document.getElementById('user-role').textContent = p.email || '—';
+                        const initials = (p.name || p.email || 'JM').split(/\s+/).map(s => s[0]).join('').toUpperCase().slice(0, 2);
+                        document.getElementById('user-avatar').textContent = initials;
+                    }
+                } catch (_) {}
+
+                const clockSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+                const matchSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
+
+                let savedJobIds = [];
+                let currentModalJob = null;
+                async function openJobModal(job) {
+                    currentModalJob = job;
+                    modalTitle.textContent = job.title || '';
+                    modalCompany.textContent = job.company || '';
+                    modalTags.innerHTML = (job.technologies || []).map(t => '<span class="tag">' + escapeHtml(t) + '</span>').join('');
+                    modalMatch.textContent = job.matchScore != null ? job.matchScore + '% Match' : '—';
+                    modalAnalysis.textContent = 'A carregar análise...';
+                    jobModal.style.display = 'flex';
+                    modalAddBtn.textContent = savedJobIds.includes(job.id) ? 'Já nas Candidaturas' : 'Adicionar a Candidaturas';
+                    modalAddBtn.disabled = savedJobIds.includes(job.id);
+                    try {
+                        const matchRes = await api('/api/jobs/' + job.id + '/match');
+                        if (matchRes.ok) { const m = await matchRes.json(); modalAnalysis.textContent = m.analysisText || '—'; }
+                        else modalAnalysis.textContent = '—';
+                    } catch (_) { modalAnalysis.textContent = '—'; }
+                }
+                modalAddBtn.addEventListener('click', async () => {
+                    if (!currentModalJob || savedJobIds.includes(currentModalJob.id)) return;
+                    const jobId = currentModalJob.id;
+                    jobModal.style.display = 'none';
+                    showView('candidaturas');
+                    try {
+                        const res = await api('/api/saved-jobs', { method: 'POST', body: JSON.stringify({ jobId: jobId, notes: '', status: 'saved' }) });
+                        if (res.ok) savedJobIds.push(jobId);
+                    } catch (_) {}
+                    await loadSavedJobs();
                 });
 
-                zone.addEventListener('drop', () => {
-                    zone.classList.remove('drag-over');
-                });
+                async function loadFeed() {
+                    const res = await api('/api/jobs/feed?size=50');
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const content = data.content || data;
+                    feedCards.innerHTML = '';
+                    (Array.isArray(content) ? content : []).forEach(job => {
+                        const techs = (job.technologies || []).map(t => '<span class="tag">' + escapeHtml(t) + '</span>').join('');
+                        const matchHtml = job.matchScore != null ? '<div class="match-score">' + matchSvg + ' ' + job.matchScore + '% Match</div>' : '';
+                        const card = document.createElement('div');
+                        card.className = 'kanban-card';
+                        card.style.minWidth = '300px';
+                        card.style.maxWidth = '320px';
+                        card.dataset.jobId = job.id;
+                        card.innerHTML = '<div class="card-company"><div class="company-logo">' + (job.company ? job.company[0] : '?') + '</div><span class="company-name">' + escapeHtml(job.company || '') + '</span></div><h3 class="card-title">' + escapeHtml(job.title || '') + '</h3><div class="card-tags">' + techs + '</div><div class="card-footer"><div class="card-date">' + clockSvg + ' Vaga</div>' + matchHtml + '<button type="button" class="btn-primary" style="margin-top:8px;padding:6px 12px;font-size:12px;" data-save-job>Salvar</button></div>';
+                        const btn = card.querySelector('[data-save-job]');
+                        if (savedJobIds.includes(job.id)) { btn.textContent = 'Salvo'; btn.disabled = true; }
+                        else btn.addEventListener('click', (e) => { e.stopPropagation(); saveJob(job.id, btn); });
+                        card.addEventListener('click', (e) => { if (!e.target.closest('[data-save-job]')) openJobModal(job); });
+                        feedCards.appendChild(card);
+                    });
+                }
+
+                async function saveJob(jobId, btn) {
+                    try {
+                        const res = await api('/api/saved-jobs', { method: 'POST', body: JSON.stringify({ jobId: jobId, notes: '', status: 'saved' }) });
+                        if (res.ok) {
+                            savedJobIds.push(jobId);
+                            btn.textContent = 'Salvo';
+                            btn.disabled = true;
+                            showView('candidaturas');
+                            await loadSavedJobs();
+                        }
+                    } catch (_) {}
+                }
+
+                function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+                function buildSavedCard(saved) {
+                    const j = saved.job || {};
+                    const techs = (j.technologies || []).map(t => '<span class="tag">' + escapeHtml(t) + '</span>').join('');
+                    const matchHtml = saved.matchScore != null ? '<div class="match-score">' + matchSvg + ' ' + saved.matchScore + '% Match</div>' : '';
+                    const card = document.createElement('div');
+                    card.className = 'kanban-card';
+                    card.setAttribute('draggable', 'true');
+                    card.dataset.savedId = saved.id;
+                    card.dataset.status = saved.status || 'saved';
+                    card.innerHTML = '<div class="card-company"><div class="company-logo">' + (j.company ? j.company[0] : '?') + '</div><span class="company-name">' + escapeHtml(j.company || '') + '</span></div><h3 class="card-title">' + escapeHtml(j.title || '') + '</h3><div class="card-tags">' + techs + '</div><div class="card-footer"><div class="card-date">' + clockSvg + ' Salvo</div>' + matchHtml + '<button type="button" class="btn-icon" style="position:absolute;top:8px;right:8px;padding:4px;" data-remove title="Remover">✕</button></div>';
+                    card.querySelector('[data-remove]').addEventListener('click', (e) => { e.stopPropagation(); removeSaved(saved.id, card); });
+                    card.addEventListener('dragstart', (e) => { card.classList.add('dragging'); e.dataTransfer.setData('text/plain', saved.id); e.dataTransfer.effectAllowed = 'move'; });
+                    card.addEventListener('dragend', () => { card.classList.remove('dragging'); updateCounts(); });
+                    return card;
+                }
+
+                async function removeSaved(id, card) {
+                    try {
+                        const res = await api('/api/saved-jobs/' + id, { method: 'DELETE' });
+                        if (res.status === 204) { card.remove(); updateCounts(); }
+                    } catch (_) {}
+                }
+
+                async function loadSavedJobs() {
+                    colApplied.innerHTML = '';
+                    colInterview.innerHTML = '';
+                    colOffer.innerHTML = '';
+                    updateCounts();
+                    try {
+                        const res = await api('/api/saved-jobs?size=100');
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        const list = Array.isArray(data.content) ? data.content : (Array.isArray(data) ? data : []);
+                        savedJobIds = list.map(s => (s.job && s.job.id) || null).filter(Boolean);
+                        colApplied.innerHTML = '';
+                        colInterview.innerHTML = '';
+                        colOffer.innerHTML = '';
+                        list.forEach(saved => {
+                            try {
+                                const card = buildSavedCard(saved);
+                                const status = (saved.status || 'saved').toLowerCase();
+                                if (status === 'offer') colOffer.appendChild(card);
+                                else if (status === 'applied') colInterview.appendChild(card);
+                                else colApplied.appendChild(card);
+                            } catch (e) { console.warn('Card build skip', saved, e); }
+                        });
+                        updateCounts();
+                        attachDragDrop();
+                    } catch (e) { console.warn('loadSavedJobs error', e); }
+                }
+
+                function updateCounts() {
+                    document.getElementById('count-applied').textContent = colApplied.children.length;
+                    document.getElementById('count-interview').textContent = colInterview.children.length;
+                    document.getElementById('count-offer').textContent = colOffer.children.length;
+                }
+
+                let dragDropZonesInitialized = false;
+                function initDragDropZones() {
+                    if (dragDropZonesInitialized) return;
+                    dragDropZonesInitialized = true;
+                    [colApplied, colInterview, colOffer].forEach(zone => {
+                        zone.addEventListener('dragover', e => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = 'move';
+                            zone.classList.add('drag-over');
+                            const dragging = document.querySelector('.kanban-card.dragging');
+                            if (!dragging || !dragging.dataset.savedId) return;
+                            const after = getDragAfterElement(zone, e.clientY);
+                            if (after == null) zone.appendChild(dragging);
+                            else zone.insertBefore(dragging, after);
+                        });
+                        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                        zone.addEventListener('drop', async (e) => {
+                            e.preventDefault();
+                            zone.classList.remove('drag-over');
+                            const dragging = document.querySelector('.kanban-card.dragging');
+                            if (!dragging || !dragging.dataset.savedId) return;
+                            const newStatus = zone.dataset.status || 'saved';
+                            try {
+                                await api('/api/saved-jobs/' + dragging.dataset.savedId, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
+                                dragging.dataset.status = newStatus;
+                            } catch (_) {}
+                        });
+                    });
+                }
+                function attachDragDrop() {
+                    initDragDropZones();
+                }
+
+                function getDragAfterElement(container, y) {
+                    const els = [...container.querySelectorAll('.kanban-card:not(.dragging)')];
+                    let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+                    els.forEach(child => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+                        if (offset < 0 && offset > closest.offset) closest = { offset, element: child };
+                    });
+                    return closest.element;
+                }
+
+                await loadFeed();
+                await loadSavedJobs();
             });
-
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.kanban-card:not(.dragging)')];
-
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            }
-        });
+        })();
     </script>
 </body>
 </html>
