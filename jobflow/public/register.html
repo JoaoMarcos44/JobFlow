@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobFlow - Criar conta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        :root {
+            --bg-color: #020617;
+            --card-bg: #0f172a;
+            --primary-color: #06b6d4;
+            --primary-hover: #0891b2;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --error-color: #ef4444;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at top left, rgba(6, 182, 212, 0.05), transparent 40%),
+                              radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.05), transparent 40%);
+        }
+        .register-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        .register-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        }
+        .brand {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary-color), #4f46e5);
+            border-radius: 16px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px -5px rgba(6, 182, 212, 0.4);
+        }
+        .logo-icon svg { width: 32px; height: 32px; color: white; }
+        .brand h1 {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .brand p { color: var(--text-muted); font-size: 15px; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background-color: rgba(2, 6, 23, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.15);
+        }
+        .form-group input.is-invalid { border-color: var(--error-color); }
+        .error-message {
+            color: var(--error-color);
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(6, 182, 212, 0.4);
+        }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .login-prompt {
+            text-align: center;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 15px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+        .login-prompt a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+            transition: color 0.2s;
+        }
+        .login-prompt a:hover { color: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <div class="register-card">
+        <div class="brand">
+            <div class="logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <h1>JobFlow</h1>
+            <p>Crie a sua conta e comece a organizar as suas candidaturas.</p>
+        </div>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">Nome (opcional)</label>
+                <input type="text" id="name" placeholder="O seu nome" maxlength="255">
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" placeholder="dev@exemplo.com" required>
+                <div class="error-message" id="emailError">Insira um e-mail válido.</div>
+            </div>
+            <div class="form-group">
+                <label for="password">Palavra-passe</label>
+                <input type="password" id="password" placeholder="Mínimo 8 caracteres" required minlength="8" maxlength="72">
+                <div class="error-message" id="passwordError">A palavra-passe deve ter pelo menos 8 caracteres.</div>
+            </div>
+            <div class="form-group">
+                <label for="passwordConfirm">Confirmar palavra-passe</label>
+                <input type="password" id="passwordConfirm" placeholder="Repita a palavra-passe" required minlength="8">
+                <div class="error-message" id="passwordConfirmError">As palavras-passe não coincidem.</div>
+            </div>
+            <button type="submit" class="btn-primary" id="submitBtn">
+                <span id="btnText">Criar conta</span>
+                <span class="spinner" id="btnSpinner"></span>
+            </button>
+        </form>
+
+        <div class="login-prompt">
+            Já tem conta? <a href="/">Entrar</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registerForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordConfirmInput = document.getElementById('passwordConfirm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+
+        function showMessage(msg, type) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.cssText = 'position:fixed;top:20px;right:20px;padding:16px 24px;border-radius:8px;font-weight:500;z-index:1000;';
+            el.style.backgroundColor = type === 'success' ? 'var(--primary-color)' : '#ef4444';
+            el.style.color = 'white';
+            document.body.appendChild(el);
+            setTimeout(function() {
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.3s';
+                setTimeout(function() { el.remove(); }, 300);
+            }, 3000);
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var isValid = true;
+
+            if (!emailInput.value.trim().includes('@')) {
+                emailInput.classList.add('is-invalid');
+                document.getElementById('emailError').style.display = 'block';
+                isValid = false;
+            } else {
+                emailInput.classList.remove('is-invalid');
+                document.getElementById('emailError').style.display = 'none';
+            }
+
+            if (passwordInput.value.length < 8) {
+                passwordInput.classList.add('is-invalid');
+                document.getElementById('passwordError').style.display = 'block';
+                isValid = false;
+            } else {
+                passwordInput.classList.remove('is-invalid');
+                document.getElementById('passwordError').style.display = 'none';
+            }
+
+            if (passwordInput.value !== passwordConfirmInput.value) {
+                passwordConfirmInput.classList.add('is-invalid');
+                document.getElementById('passwordConfirmError').style.display = 'block';
+                isValid = false;
+            } else {
+                passwordConfirmInput.classList.remove('is-invalid');
+                document.getElementById('passwordConfirmError').style.display = 'none';
+            }
+
+            if (!isValid) return;
+
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-block';
+
+            try {
+                var nameVal = document.getElementById('name').value.trim();
+                var body = {
+                    email: emailInput.value.trim().toLowerCase(),
+                    password: passwordInput.value
+                };
+                if (nameVal) body.name = nameVal;
+
+                var resp = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!resp.ok) {
+                    var detail = '';
+                    try {
+                        var errJson = await resp.json();
+                        detail = errJson.error || errJson.message || '';
+                    } catch (_) {}
+                    if (resp.status === 400) {
+                        throw new Error(detail || 'E-mail já em uso ou dados inválidos.');
+                    }
+                    throw new Error(detail || 'Erro ao criar conta (HTTP ' + resp.status + ').');
+                }
+
+                var data = await resp.json();
+                if (data.token) {
+                    localStorage.setItem('auth_token', data.token);
+                    showMessage('Conta criada! A redirecionar. Pode fazer login com este e-mail e palavra-passe.', 'success');
+                    setTimeout(function() {
+                        window.location.href = '/dashboard.html';
+                    }, 1200);
+                } else {
+                    showMessage('Conta criada. Faça login com o mesmo e-mail e palavra-passe.', 'success');
+                    setTimeout(function() {
+                        window.location.href = '/';
+                    }, 1500);
+                }
+            } catch (err) {
+                showMessage(err.message || 'Erro inesperado.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnSpinner.style.display = 'none';
+            }
+        });
+
+        emailInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            document.getElementById('emailError').style.display = 'none';
+        });
+        passwordInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            document.getElementById('passwordError').style.display = 'none';
+        });
+        passwordConfirmInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            document.getElementById('passwordConfirmError').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
