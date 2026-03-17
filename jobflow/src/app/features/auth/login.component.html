@@ -1,0 +1,74 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="brand">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <h1>JobFlow</h1>
+      <p class="tagline">O seu funil de carreiras inteligente.</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #form="ngForm">
+      <div class="form-group">
+        <label for="email">E-mail Corporativo</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="dev@exemplo.com"
+          required
+          [class.is-invalid]="message()?.type === 'error'"
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">Palavra-passe</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          required
+          minlength="6"
+          [class.is-invalid]="message()?.type === 'error'"
+        />
+      </div>
+      <div class="options">
+        <label class="checkbox-container">
+          <input type="checkbox" name="remember" [(ngModel)]="remember" />
+          Manter sessão iniciada
+        </label>
+        <a href="#" class="forgot-password">Esqueceu a senha?</a>
+      </div>
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner"></span>
+        } @else {
+          Entrar na Plataforma
+        }
+      </button>
+    </form>
+
+    <div class="register-prompt">
+      Ainda não tem conta? <a href="/register.html">Criar conta grátis</a>
+    </div>
+  </div>
+
+  @if (message(); as msg) {
+    <div class="toast" [class.toast-error]="msg.type === 'error'" [class.toast-success]="msg.type === 'success'">
+      {{ msg.text }}
+    </div>
+  }
+  @if (showDemoLink()) {
+    <div class="demo-link-wrap">
+      <button type="button" class="btn-demo" (click)="goToFeedDemo()">
+        Continuar para o feed (modo demo)
+      </button>
+    </div>
+  }
+</div>

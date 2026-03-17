@@ -1,0 +1,104 @@
+<div class="candidaturas-view">
+  <div class="board-header">
+    <h2>Gestão de Candidaturas</h2>
+  </div>
+
+  <div class="kanban-board">
+    <div class="kanban-column col-applied">
+      <div class="column-header">
+        <div class="column-title">
+          <span class="dot"></span>
+          Aplicado
+        </div>
+        <span class="column-count">{{ saved().length }}</span>
+      </div>
+      <div class="column-content" [class.drop-target]="dragOverStatus() === 'saved'" data-status="saved" (dragover)="onDragOver($event, 'saved')" (dragleave)="onDragLeave()" (drop)="onDrop($event, 'saved')">
+        @for (card of saved(); track card.id) {
+          <div class="kanban-card" draggable="true" (dragstart)="onDragStart($event, card)">
+            <button type="button" class="btn-cancel" draggable="false" title="Remover candidatura" (click)="cancelCard($event, card)" aria-label="Remover candidatura">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="card-company">
+              <div class="company-logo">{{ card.company?.charAt(0) || '?' }}</div>
+              <span class="company-name">{{ card.company }}</span>
+            </div>
+            <h3 class="card-title">{{ card.title }}</h3>
+            <div class="card-footer">
+              <span class="card-date">Vaga</span>
+              @if (card.matchScore != null) {
+                <span class="match-score">{{ card.matchScore }}% Match</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="kanban-column col-interview">
+      <div class="column-header">
+        <div class="column-title">
+          <span class="dot"></span>
+          Entrevista / Teste
+        </div>
+        <span class="column-count">{{ applied().length }}</span>
+      </div>
+      <div class="column-content" [class.drop-target]="dragOverStatus() === 'applied'" data-status="applied" (dragover)="onDragOver($event, 'applied')" (dragleave)="onDragLeave()" (drop)="onDrop($event, 'applied')">
+        @for (card of applied(); track card.id) {
+          <div class="kanban-card" draggable="true" (dragstart)="onDragStart($event, card)">
+            <button type="button" class="btn-cancel" draggable="false" title="Remover candidatura" (click)="cancelCard($event, card)" aria-label="Remover candidatura">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="card-company">
+              <div class="company-logo">{{ card.company?.charAt(0) || '?' }}</div>
+              <span class="company-name">{{ card.company }}</span>
+            </div>
+            <h3 class="card-title">{{ card.title }}</h3>
+            <div class="card-footer">
+              <span class="card-date">Entrevista</span>
+              @if (card.matchScore != null) {
+                <span class="match-score">{{ card.matchScore }}% Match</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="kanban-column col-offer">
+      <div class="column-header">
+        <div class="column-title">
+          <span class="dot"></span>
+          Proposta Final
+        </div>
+        <span class="column-count">{{ offer().length }}</span>
+      </div>
+      <div class="column-content" [class.drop-target]="dragOverStatus() === 'offer'" data-status="offer" (dragover)="onDragOver($event, 'offer')" (dragleave)="onDragLeave()" (drop)="onDrop($event, 'offer')">
+        @for (card of offer(); track card.id) {
+          <div class="kanban-card" draggable="true" (dragstart)="onDragStart($event, card)">
+            <button type="button" class="btn-cancel" draggable="false" title="Remover candidatura" (click)="cancelCard($event, card)" aria-label="Remover candidatura">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="card-company">
+              <div class="company-logo">{{ card.company?.charAt(0) || '?' }}</div>
+              <span class="company-name">{{ card.company }}</span>
+            </div>
+            <h3 class="card-title">{{ card.title }}</h3>
+            <div class="card-footer">
+              <span class="card-date">Proposta</span>
+              @if (card.matchScore != null) {
+                <span class="match-score">{{ card.matchScore }}% Match</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (saved().length === 0 && applied().length === 0 && offer().length === 0) {
+    <div class="empty-hint">
+      <p>Nenhuma candidatura ainda. Vá ao <strong>Feed de Vagas</strong>, clique numa vaga e adicione às candidaturas.</p>
+      <button type="button" class="btn-primary" (click)="goToFeed()">Ir para o feed</button>
+    </div>
+  }
+</div>

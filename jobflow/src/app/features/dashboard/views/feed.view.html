@@ -1,0 +1,102 @@
+<div class="feed">
+  @if (saveFeedbackVisibleReadonly()) {
+    <div class="save-toast" role="status">Vaga guardada. Consulte Candidaturas.</div>
+  }
+  <header class="feed-header">
+    <h1>Feed de Vagas</h1>
+    <p class="subtitle">Vagas da API Codante. Clique em uma vaga para ver detalhes e gerir a candidatura.</p>
+  </header>
+
+  <div class="toolbar">
+    <input
+      type="text"
+      class="input"
+      placeholder="Buscar por título, empresa ou cidade..."
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+      (keydown.enter)="onSearch()"
+    />
+    <button type="button" class="btn btn-primary" (click)="onSearch()" [disabled]="loading()">
+      Buscar
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="state-wrap loading">
+      <div class="spinner"></div>
+      <p>A carregar vagas...</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-wrap error">
+      <p>Não foi possível carregar as vagas. Verifique a ligação e tente novamente.</p>
+      <button type="button" class="btn btn-outline" (click)="loadJobs()">Tentar novamente</button>
+    </div>
+  } @else {
+    <div class="results-meta">
+      @if (meta(); as m) {
+        <span>{{ m.total }} vaga(s) — página {{ m.current_page }} de {{ m.last_page }}</span>
+      }
+    </div>
+
+    <div class="cards">
+      @for (job of jobs(); track job.id) {
+        <article class="card">
+          <div class="card-main" (click)="openJob(job)" role="button" tabindex="0" (keydown.enter)="openJob(job)">
+            <div class="card-header">
+              <div class="company-avatar">{{ companyInitial(job.company) }}</div>
+              <span class="card-company">{{ job.company }}</span>
+            </div>
+            <h2 class="card-title">{{ job.title }}</h2>
+            <div class="card-tags">
+              @if (job.schedule) {
+                <span class="pill">{{ scheduleLabel(job.schedule) }}</span>
+              }
+              @if (job.city) {
+                <span class="pill">{{ job.city }}</span>
+              }
+              @for (tech of tagsFromJob(job); track tech) {
+                <span class="pill">{{ tech }}</span>
+              }
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="footer-label">Vaga</span>
+            @if (isSaved(job)) {
+              <span class="btn btn-save saved">Salvo</span>
+            } @else {
+              <button type="button" class="btn btn-save" (click)="saveJob($event, job)">Salvar</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (meta(); as m) {
+      @if (m.last_page > 1) {
+        <nav class="pagination">
+          <button
+            type="button"
+            class="btn btn-sm"
+            [disabled]="m.current_page <= 1"
+            (click)="goToPage(m.current_page - 1)"
+          >
+            Anterior
+          </button>
+          <span class="page-info">Página {{ m.current_page }} de {{ m.last_page }}</span>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [disabled]="m.current_page >= m.last_page"
+            (click)="goToPage(m.current_page + 1)"
+          >
+            Próxima
+          </button>
+        </nav>
+      }
+    }
+
+    @if (jobs().length === 0) {
+      <p class="empty">Nenhuma vaga encontrada.</p>
+    }
+  }
+</div>

@@ -1,0 +1,28 @@
+<div id="view-analytics" class="analytics-view">
+  <div class="analytics-header">
+    <h2>Dashboard Analytics</h2>
+  </div>
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <h3>Currículos Enviados</h3>
+      <div class="analytics-value">{{ totalEnviados }}</div>
+      <div class="chart-container">
+        <canvas #chartEnviados></canvas>
+      </div>
+    </div>
+    <div class="analytics-card">
+      <h3>Currículos Recebidos por Fonte</h3>
+      <div class="analytics-value">{{ totalRecebidos }}</div>
+      <div class="chart-container">
+        <canvas #chartRecebidos></canvas>
+      </div>
+    </div>
+    <div class="analytics-card">
+      <h3>Resultados ao Longo do Tempo</h3>
+      <div class="analytics-value">{{ totalResultados }}</div>
+      <div class="chart-container">
+        <canvas #chartResultados></canvas>
+      </div>
+    </div>
+  </div>
+</div>

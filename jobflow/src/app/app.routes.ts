@@ -1,13 +1,18 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login.component').then((m) => m.LoginComponent),
+  },
   {
     path: 'dashboard',
     loadComponent: () =>
       import('./features/dashboard/dashboard-layout.component').then((m) => m.DashboardLayoutComponent),
     children: [
-      { path: '', redirectTo: 'candidaturas', pathMatch: 'full' },
+      { path: '', redirectTo: 'feed', pathMatch: 'full' },
       {
         path: 'feed',
         loadComponent: () =>
@@ -35,5 +40,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  { path: '**', redirectTo: 'login' },
 ];

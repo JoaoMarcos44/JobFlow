@@ -1,0 +1,48 @@
+<div class="definicoes-view">
+  <div class="board-header">
+    <h2>Definições</h2>
+  </div>
+  <div class="definicoes-content">
+    <div class="settings-section">
+      <h3>Alterar palavra-passe</h3>
+      <form (ngSubmit)="onSubmitPassword()" class="settings-form">
+        <div class="form-group">
+          <label for="current-password">Palavra-passe atual</label>
+          <input type="password" id="current-password" [(ngModel)]="currentPassword" name="currentPassword" placeholder="••••••••" minlength="6" class="input">
+        </div>
+        <div class="form-group">
+          <label for="new-password">Nova palavra-passe</label>
+          <input type="password" id="new-password" [(ngModel)]="newPassword" name="newPassword" placeholder="••••••••" minlength="8" class="input">
+        </div>
+        <button type="submit" class="btn-primary">Atualizar palavra-passe</button>
+        @if (msgPassword) {
+          <p class="msg" [class.msg-success]="msgPasswordSuccess">{{ msgPassword }}</p>
+        }
+      </form>
+    </div>
+    <div class="settings-section">
+      <h3>Alterar e-mail</h3>
+      <form (ngSubmit)="onSubmitEmail()" class="settings-form">
+        <div class="form-group">
+          <label for="new-email">Novo e-mail</label>
+          <input type="email" id="new-email" [(ngModel)]="newEmail" name="newEmail" placeholder="novo@email.com" class="input">
+        </div>
+        <div class="form-group">
+          <label for="email-password">Palavra-passe (confirmar)</label>
+          <input type="password" id="email-password" [(ngModel)]="emailPassword" name="emailPassword" placeholder="••••••••" class="input">
+        </div>
+        <button type="submit" class="btn-primary">Atualizar e-mail</button>
+        @if (msgEmail) {
+          <p class="msg" [class.msg-success]="msgEmailSuccess">{{ msgEmail }}</p>
+        }
+      </form>
+    </div>
+    <div class="settings-section">
+      <h3>Aparência</h3>
+      <label class="checkbox-label">
+        <input type="checkbox" [checked]="themeLight" (change)="onThemeChange($any($event.target).checked)" class="checkbox">
+        Modo claro
+      </label>
+    </div>
+  </div>
+</div>
