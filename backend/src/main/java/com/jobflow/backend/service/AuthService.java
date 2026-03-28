@@ -2,6 +2,8 @@ package com.jobflow.backend.service;
 
 import com.jobflow.backend.dto.LoginRequest;
 import com.jobflow.backend.dto.RegisterRequest;
+import com.jobflow.backend.exception.EmailAlreadyRegisteredException;
+import com.jobflow.backend.exception.InvalidCredentialsException;
 import com.jobflow.backend.model.User;
 import com.jobflow.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,7 +30,7 @@ public class AuthService {
             throw new IllegalArgumentException("Email is required");
         }
         if (users.existsByEmailIgnoreCase(email)) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new EmailAlreadyRegisteredException();
         }
         User user = new User(email, encoder.encode(req.password()));
         users.save(user);
@@ -39,10 +41,10 @@ public class AuthService {
         String email = normalizeEmail(req.email());
 
         User user = users.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!encoder.matches(req.password(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         return jwt.issueToken(user);
@@ -50,5 +52,14 @@ public class AuthService {
 
     private String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    /**
+     * Resposta genérica (sem revelar se o e-mail existe). O front apenas confirma sucesso HTTP.
+     * Envio real de e-mail pode ser ligado aqui mais tarde.
+     */
+    public void requestPasswordReset(String email) {
+        normalizeEmail(email);
+        // opcional: users.findByEmailIgnoreCase(email).ifPresent(u -> mailService.send(...));
     }
 }

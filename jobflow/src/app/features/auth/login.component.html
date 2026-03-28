@@ -1,6 +1,6 @@
 <div class="login-page">
-  <div class="login-card">
-    <div class="brand">
+  <div class="login-card auth-anim-card">
+    <div class="brand auth-anim-brand">
       <div class="logo-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -13,7 +13,7 @@
     </div>
 
     <form (ngSubmit)="onSubmit()" #form="ngForm">
-      <div class="form-group">
+      <div class="form-group auth-anim-field">
         <label for="email">E-mail Corporativo</label>
         <input
           type="email"
@@ -25,7 +25,7 @@
           [class.is-invalid]="message()?.type === 'error'"
         />
       </div>
-      <div class="form-group">
+      <div class="form-group auth-anim-field">
         <label for="password">Palavra-passe</label>
         <input
           type="password"
@@ -38,14 +38,14 @@
           [class.is-invalid]="message()?.type === 'error'"
         />
       </div>
-      <div class="options">
+      <div class="options auth-anim-options">
         <label class="checkbox-container">
           <input type="checkbox" name="remember" [(ngModel)]="remember" />
           Manter sessão iniciada
         </label>
-        <a href="#" class="forgot-password">Esqueceu a senha?</a>
+        <a routerLink="/recuperar-conta" class="forgot-password">Esqueceu a conta?</a>
       </div>
-      <button type="submit" class="btn-primary" [disabled]="loading()">
+      <button type="submit" class="btn-primary auth-anim-submit" [disabled]="loading()">
         @if (loading()) {
           <span class="spinner"></span>
         } @else {
@@ -54,8 +54,8 @@
       </button>
     </form>
 
-    <div class="register-prompt">
-      Ainda não tem conta? <a href="/register.html">Criar conta grátis</a>
+    <div class="register-prompt auth-anim-footer">
+      Ainda não tem conta? <a routerLink="/register">Criar conta grátis</a>
     </div>
   </div>
 

@@ -16,6 +16,7 @@ export interface CodanteJob {
   requirements: string;
   created_at: string;
   updated_at: string;
+  number_of_positions?: number;
 }
 
 export interface JobListMeta {

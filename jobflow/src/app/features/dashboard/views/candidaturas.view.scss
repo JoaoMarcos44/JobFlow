@@ -13,6 +13,10 @@ $status-offer: #10b981;
   padding: 24px 32px;
   min-height: 100%;
   background: $bg-dark;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color 0.5s ease;
+  }
 }
 
 .board-header {
@@ -46,6 +50,12 @@ $status-offer: #10b981;
   display: flex;
   flex-direction: column;
   border: 1px solid $border-color;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      background-color 0.45s ease,
+      border-color 0.45s ease;
+  }
 }
 
 .column-header {
@@ -112,9 +122,17 @@ $status-offer: #10b981;
   border-radius: 8px;
   padding: 16px;
   padding-top: 36px;
-  transition: all 0.2s;
   cursor: grab;
   user-select: none;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      transform 0.2s,
+      border-color 0.2s,
+      box-shadow 0.2s,
+      background-color 0.45s ease;
+  }
 
   &:active {
     cursor: grabbing;
@@ -229,4 +247,62 @@ $status-offer: #10b981;
 
 .btn-primary:hover {
   background-color: #0891b2;
+}
+
+:host-context(html.theme-light) {
+  .candidaturas-view {
+    background: #f1f5f9;
+  }
+
+  .board-header h2 {
+    color: #0f172a;
+  }
+
+  .kanban-column {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .column-header {
+    border-bottom-color: #e2e8f0;
+  }
+
+  .column-title {
+    color: #0f172a;
+  }
+
+  .column-count {
+    background-color: #e2e8f0;
+    color: #64748b;
+  }
+
+  .kanban-card {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+  }
+
+  .btn-cancel:hover {
+    background: rgba(248, 113, 113, 0.08);
+  }
+
+  .company-name {
+    color: #64748b;
+  }
+
+  .card-title {
+    color: #0f172a;
+  }
+
+  .card-footer {
+    border-top-color: #e2e8f0;
+    color: #64748b;
+  }
+
+  .empty-hint {
+    color: #64748b;
+  }
 }

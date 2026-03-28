@@ -15,6 +15,12 @@ $border-color: #334155;
   overflow: hidden;
   background-color: $bg-dark;
   color: $text-main;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      background-color 0.5s ease,
+      color 0.45s ease;
+  }
 }
 
 .sidebar {
@@ -25,6 +31,12 @@ $border-color: #334155;
   flex-direction: column;
   padding: 24px 0;
   z-index: 10;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      background-color 0.5s ease,
+      border-color 0.45s ease;
+  }
 }
 
 .brand {
@@ -211,37 +223,18 @@ $border-color: #334155;
   border-bottom: 1px solid $border-color;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 32px;
   background-color: rgba(2, 6, 23, 0.8);
   backdrop-filter: blur(10px);
   z-index: 5;
   flex-shrink: 0;
-}
 
-.search-container {
-  position: relative;
-  width: 400px;
-}
-
-.search-container svg {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: $text-muted;
-  width: 18px;
-  height: 18px;
-}
-
-.search-input {
-  width: 100%;
-  background-color: $bg-panel;
-  border: 1px solid $border-color;
-  padding: 10px 16px 10px 40px;
-  border-radius: 8px;
-  color: $text-main;
-  font-size: 14px;
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      background-color 0.5s ease,
+      border-color 0.45s ease;
+  }
 }
 
 .topbar-actions {
@@ -311,4 +304,111 @@ $border-color: #334155;
   flex: 1;
   overflow: auto;
   padding: 0;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color 0.5s ease;
+  }
+}
+
+/* —— Modo claro (dashboard shell) —— */
+:host-context(html.theme-light) {
+  .dashboard-shell {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+
+  .sidebar {
+    background-color: #ffffff;
+    border-right-color: #e2e8f0;
+  }
+
+  .nav-item {
+    color: #64748b;
+  }
+
+  .nav-item:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .nav-item.active {
+    background-color: rgba(8, 145, 178, 0.12);
+    color: #0891b2;
+    border-left-color: #0891b2;
+  }
+
+  .brand h1 {
+    background: linear-gradient(to right, #0f172a, #0891b2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sidebar-footer {
+    border-top-color: #e2e8f0;
+  }
+
+  .user-profile {
+    border-top-color: #e2e8f0;
+  }
+
+  .user-profile:hover {
+    background-color: #f1f5f9;
+  }
+
+  .user-profile-dropdown {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  }
+
+  .user-profile-dropdown button {
+    color: #0f172a;
+  }
+
+  .user-profile-dropdown button:hover {
+    background-color: #f1f5f9;
+  }
+
+  .avatar {
+    background-color: #e2e8f0;
+    color: #0891b2;
+    border-color: #cbd5e1;
+  }
+
+  .user-info p {
+    color: #64748b;
+  }
+
+  .main-content {
+    background-image: radial-gradient(circle at top right, rgba(8, 145, 178, 0.06), transparent 50%);
+  }
+
+  .topbar {
+    border-bottom-color: #e2e8f0;
+    background-color: rgba(248, 250, 252, 0.92);
+  }
+
+  .view-area {
+    background-color: #f1f5f9;
+  }
+
+  .btn-icon {
+    border-color: #e2e8f0;
+    color: #64748b;
+  }
+
+  .btn-icon:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .badge {
+    color: #ffffff;
+    border-color: #f8fafc;
+  }
+
+  .btn-primary {
+    color: #ffffff;
+  }
 }

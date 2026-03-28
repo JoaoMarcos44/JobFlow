@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject, ElementRef, afterNextRender, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { animateElementsFrom, createDashboardViewStagger } from '../dashboard.animations';
 
 @Component({
   selector: 'app-definicoes-view',
@@ -9,12 +10,37 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './definicoes.view.html',
   styleUrls: ['./definicoes.view.scss'],
 })
-export class DefinicoesViewComponent {
+export class DefinicoesViewComponent implements OnDestroy {
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
+
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        const root =
+          (this.host.nativeElement.querySelector('.definicoes-view') as HTMLElement) ??
+          this.host.nativeElement;
+        this.viewCtx = createDashboardViewStagger(root);
+        queueMicrotask(() =>
+          animateElementsFrom(root, '.settings-section', {
+            y: 18,
+            opacity: 0,
+            duration: 0.4,
+            stagger: 0.1,
+            ease: 'power3.out',
+          }),
+        );
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.viewCtx?.revert();
+  }
   currentPassword = '';
   newPassword = '';
   newEmail = '';
   emailPassword = '';
-  themeLight = false;
   msgPassword = '';
   msgEmail = '';
   msgPasswordSuccess = false;
@@ -28,12 +54,5 @@ export class DefinicoesViewComponent {
   onSubmitEmail(): void {
     this.msgEmail = 'Funcionalidade ligada ao backend quando disponível.';
     this.msgEmailSuccess = false;
-  }
-
-  onThemeChange(checked: boolean): void {
-    this.themeLight = checked;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('theme', checked ? 'light' : 'dark');
-    }
   }
 }

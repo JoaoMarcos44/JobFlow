@@ -1,19 +1,39 @@
-import { Component, signal, inject } from '@angular/core';
+import {
+  Component,
+  signal,
+  inject,
+  ElementRef,
+  afterNextRender,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { createAuthCardEntrance } from './auth-card.animations';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private ctx?: ReturnType<typeof createAuthCardEntrance>;
+
+  constructor() {
+    afterNextRender(() => {
+      this.ctx = createAuthCardEntrance(this.host.nativeElement);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.ctx?.revert();
+  }
 
   readonly loading = signal(false);
   readonly message = signal<{ text: string; type: 'success' | 'error' } | null>(null);

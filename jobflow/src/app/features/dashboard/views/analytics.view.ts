@@ -1,6 +1,15 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import {
+  Component,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  OnDestroy,
+  inject,
+  afterNextRender,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
+import { animateElementsFrom, createDashboardViewStagger } from '../dashboard.animations';
 
 Chart.register(...registerables);
 
@@ -16,17 +25,45 @@ export class AnalyticsViewComponent implements AfterViewInit, OnDestroy {
   @ViewChild('chartRecebidos') chartRecebidosRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('chartResultados') chartResultadosRef!: ElementRef<HTMLCanvasElement>;
 
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
+
+  private get viewRoot(): HTMLElement {
+    return (
+      (this.host.nativeElement.querySelector('.analytics-view') as HTMLElement) ??
+      this.host.nativeElement
+    );
+  }
+
   totalEnviados = 24;
   totalRecebidos = '100%';
   totalResultados = '—';
 
   private charts: Chart[] = [];
 
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        this.viewCtx = createDashboardViewStagger(this.viewRoot);
+        queueMicrotask(() =>
+          animateElementsFrom(this.viewRoot, '.analytics-card', {
+            y: 20,
+            opacity: 0,
+            duration: 0.42,
+            stagger: 0.08,
+            ease: 'power3.out',
+          }),
+        );
+      });
+    });
+  }
+
   ngAfterViewInit(): void {
     this.initCharts();
   }
 
   ngOnDestroy(): void {
+    this.viewCtx?.revert();
     this.charts.forEach((c) => c.destroy());
     this.charts = [];
   }

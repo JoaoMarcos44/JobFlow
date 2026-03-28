@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ElementRef, afterNextRender, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ResumesService } from '../../../core/services/resumes.service';
+import { createDashboardViewStagger } from '../dashboard.animations';
 
 @Component({
   selector: 'app-curriculos-view',
@@ -10,8 +11,25 @@ import { ResumesService } from '../../../core/services/resumes.service';
   templateUrl: './curriculos.view.html',
   styleUrls: ['./curriculos.view.scss'],
 })
-export class CurriculosViewComponent {
+export class CurriculosViewComponent implements OnDestroy {
   private readonly resumes = inject(ResumesService);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
+
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        const root =
+          (this.host.nativeElement.querySelector('.curriculos-view') as HTMLElement) ??
+          this.host.nativeElement;
+        this.viewCtx = createDashboardViewStagger(root);
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.viewCtx?.revert();
+  }
 
   selectedFile: File | null = null;
   selectedFileName = '';

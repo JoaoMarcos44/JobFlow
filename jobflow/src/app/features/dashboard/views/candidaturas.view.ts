@@ -1,7 +1,16 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  ElementRef,
+  afterNextRender,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SavedJobsService, KanbanStatus } from '../../../core/services/saved-jobs.service';
+import { animateElementsFrom, createDashboardViewStagger } from '../dashboard.animations';
 
 export interface KanbanCard {
   id: string;
@@ -18,9 +27,39 @@ export interface KanbanCard {
   templateUrl: './candidaturas.view.html',
   styleUrls: ['./candidaturas.view.scss'],
 })
-export class CandidaturasViewComponent {
+export class CandidaturasViewComponent implements OnDestroy {
   private readonly router = inject(Router);
   private readonly savedJobs = inject(SavedJobsService);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
+
+  private get viewRoot(): HTMLElement {
+    return (
+      (this.host.nativeElement.querySelector('.candidaturas-view') as HTMLElement) ??
+      this.host.nativeElement
+    );
+  }
+
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        this.viewCtx = createDashboardViewStagger(this.viewRoot);
+        queueMicrotask(() =>
+          animateElementsFrom(this.viewRoot, '.kanban-column', {
+            y: 24,
+            opacity: 0,
+            duration: 0.45,
+            stagger: 0.09,
+            ease: 'power3.out',
+          }),
+        );
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.viewCtx?.revert();
+  }
 
   readonly saved = computed<KanbanCard[]>(() =>
     this.savedJobs.savedJobs().filter((i) => i.status === 'saved').map(this.toCard)

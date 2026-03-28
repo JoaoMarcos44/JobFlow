@@ -1,6 +1,16 @@
-import { Component, OnInit, inject, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  HostListener,
+  ElementRef,
+  afterNextRender,
+  OnDestroy,
+} from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
+import { createDashboardShellEntrance } from './dashboard.animations';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -9,17 +19,35 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './dashboard-layout.component.html',
   styleUrls: ['./dashboard-layout.component.scss'],
 })
-export class DashboardLayoutComponent implements OnInit {
+export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  protected readonly theme = inject(ThemeService);
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private shellCtx?: ReturnType<typeof createDashboardShellEntrance>;
 
   profileMenuOpen = false;
   userName = 'Utilizador';
   userEmail = '—';
   userInitials = '?';
 
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        const shell = this.host.nativeElement.querySelector('.dashboard-shell') as HTMLElement | null;
+        if (shell) {
+          this.shellCtx = createDashboardShellEntrance(shell);
+        }
+      });
+    });
+  }
+
   ngOnInit(): void {
     this.loadProfile();
+  }
+
+  ngOnDestroy(): void {
+    this.shellCtx?.revert();
   }
 
   private loadProfile(): void {
