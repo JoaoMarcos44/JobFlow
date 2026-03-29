@@ -6,5 +6,5 @@ import { markWelcomeAnimationForFullPageLoad } from './app/core/welcome-animatio
 
 if (!redirectFullReloadToWelcome()) {
   markWelcomeAnimationForFullPageLoad();
-  bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+  bootstrapApplication(App, appConfig).catch(() => undefined);
 }

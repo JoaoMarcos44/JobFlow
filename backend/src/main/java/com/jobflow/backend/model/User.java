@@ -1,5 +1,6 @@
 package com.jobflow.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class User {
     public UUID getId() { return id; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    @JsonIgnore
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public Instant getCreatedAt() { return createdAt; }

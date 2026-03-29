@@ -54,9 +54,10 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     const token = this.auth.getToken();
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        this.userEmail = payload.email || '—';
-        this.userName = payload.email ? payload.email.split('@')[0] : 'Utilizador';
+        const payload = JSON.parse(atob(token.split('.')[1])) as { sub?: string; email?: string };
+        const email = payload.email ?? payload.sub;
+        this.userEmail = email || '—';
+        this.userName = email ? email.split('@')[0] : 'Utilizador';
         this.userInitials = this.userName.slice(0, 2).toUpperCase();
       } catch {
         this.userInitials = '?';

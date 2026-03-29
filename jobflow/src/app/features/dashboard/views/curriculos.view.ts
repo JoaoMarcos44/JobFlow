@@ -67,7 +67,7 @@ export class CurriculosViewComponent implements OnDestroy {
   }
 
   downloadResume(id: string): void {
-    this.resumes.download(id);
+    void this.resumes.download(id);
   }
 
   canDownload(id: string): boolean {

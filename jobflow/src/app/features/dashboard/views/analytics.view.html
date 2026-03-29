@@ -1,25 +1,72 @@
 <div id="view-analytics" class="analytics-view">
   <div class="analytics-header">
     <h2>Dashboard Analytics</h2>
+    <div class="analytics-header-actions">
+      <div class="period-switch" role="tablist" aria-label="Período dos gráficos">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="period() === 'week'"
+          [class.active]="period() === 'week'"
+          (click)="setPeriod('week')"
+        >
+          Semana
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="period() === 'month'"
+          [class.active]="period() === 'month'"
+          (click)="setPeriod('month')"
+        >
+          Mês
+        </button>
+      </div>
+      <button
+        type="button"
+        class="btn-refresh"
+        (click)="refreshCharts()"
+        [disabled]="refreshing()"
+        [class.spinning]="refreshing()"
+        title="Atualizar dados (demo)"
+        aria-label="Atualizar gráficos"
+      >
+        <span class="btn-refresh-icon" aria-hidden="true"></span>
+        Atualizar
+      </button>
+      <button
+        type="button"
+        class="btn-live"
+        [class.on]="liveDemo()"
+        (click)="toggleLiveDemo()"
+        [attr.aria-pressed]="liveDemo()"
+        title="Simula atualizações periódicas"
+      >
+        <span class="live-dot" aria-hidden="true"></span>
+        {{ liveDemo() ? 'Ao vivo' : 'Modo vivo' }}
+      </button>
+    </div>
   </div>
   <div class="analytics-grid">
-    <div class="analytics-card">
+    <div class="analytics-card" [class.pulse-kpi]="refreshing()">
       <h3>Currículos Enviados</h3>
-      <div class="analytics-value">{{ totalEnviados }}</div>
+      <div class="analytics-value" [class.value-tick]="refreshing()">{{ totalEnviados() }}</div>
       <div class="chart-container">
         <canvas #chartEnviados></canvas>
       </div>
     </div>
-    <div class="analytics-card">
+    <div class="analytics-card" [class.pulse-kpi]="refreshing()">
       <h3>Currículos Recebidos por Fonte</h3>
-      <div class="analytics-value">{{ totalRecebidos }}</div>
+      <div class="analytics-value" [class.value-tick]="refreshing()">{{ totalRecebidos() }}</div>
       <div class="chart-container">
         <canvas #chartRecebidos></canvas>
       </div>
     </div>
-    <div class="analytics-card">
+    <div class="analytics-card" [class.pulse-kpi]="refreshing()">
       <h3>Resultados ao Longo do Tempo</h3>
-      <div class="analytics-value">{{ totalResultados }}</div>
+      <div class="analytics-value analytics-value-sub" [class.value-tick]="refreshing()">
+        {{ totalResultados() }}
+      </div>
       <div class="chart-container">
         <canvas #chartResultados></canvas>
       </div>
