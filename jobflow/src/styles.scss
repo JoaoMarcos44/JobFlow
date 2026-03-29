@@ -1,1 +1,62 @@
-/* You can add global styles to this file, and also import other style files */
+/* Variáveis globais JobFlow (tema dark/tech) */
+:root {
+  --bg-color: #020617;
+  --card-bg: #0f172a;
+  --primary-color: #06b6d4;
+  --primary-hover: #0891b2;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #1e293b;
+  --error-color: #ef4444;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+/* Modo claro (classe em <html> via ThemeService) */
+html.theme-light {
+  --bg-color: #f1f5f9;
+  --card-bg: #ffffff;
+  --primary-color: #0891b2;
+  --primary-hover: #0e7490;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --error-color: #dc2626;
+}
+
+html.theme-light body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+/* Transição suave entre temas (fallback quando View Transitions API não existe) */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    transition: background-color 0.5s ease;
+  }
+
+  body {
+    transition:
+      background-color 0.5s ease,
+      color 0.45s ease;
+  }
+}
+
+/* Duração do cross-fade nativo (Chrome / Edge / Opera) */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.55s;
+    animation-timing-function: ease;
+  }
+}

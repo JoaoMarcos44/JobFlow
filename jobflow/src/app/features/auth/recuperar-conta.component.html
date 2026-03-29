@@ -1,0 +1,60 @@
+<div class="login-page">
+  <div class="login-card auth-anim-card">
+    <div class="brand auth-anim-brand">
+      <div class="logo-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      </div>
+      <h1>Recuperação de conta</h1>
+      <p class="tagline">Indique o seu e-mail para receber o link de redefinição de palavra-passe.</p>
+    </div>
+
+    <div class="recovery-form">
+      <div class="form-group auth-anim-field">
+        <label for="recovery-email">E-mail</label>
+        <input
+          type="email"
+          id="recovery-email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="nome@empresa.com"
+          autocomplete="email"
+          (keydown.enter)="sendEmail()"
+          [class.is-invalid]="message()?.type === 'error'"
+        />
+      </div>
+
+      <div class="recovery-send-row">
+        <button
+          type="button"
+          class="btn-send-email auth-anim-submit"
+          (click)="sendEmail()"
+          [disabled]="loading()"
+          title="Enviar e-mail de recuperação"
+          aria-label="Enviar e-mail de recuperação"
+        >
+          @if (loading()) {
+            <span class="spinner"></span>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+
+    <div class="register-prompt auth-anim-footer">
+      <a routerLink="/login">Voltar ao login</a>
+    </div>
+  </div>
+
+  @if (message(); as msg) {
+    <div class="toast" [class.toast-error]="msg.type === 'error'" [class.toast-success]="msg.type === 'success'">
+      {{ msg.text }}
+    </div>
+  }
+</div>

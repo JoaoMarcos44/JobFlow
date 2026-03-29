@@ -1,0 +1,308 @@
+$bg-dark: #020617;
+$bg-panel: #0f172a;
+$bg-card: #1e293b;
+$border-color: #334155;
+$primary: #06b6d4;
+$text-main: #f8fafc;
+$text-muted: #94a3b8;
+$status-applied: #3b82f6;
+$status-interview: #8b5cf6;
+$status-offer: #10b981;
+
+.candidaturas-view {
+  padding: 24px 32px;
+  min-height: 100%;
+  background: $bg-dark;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: background-color 0.5s ease;
+  }
+}
+
+.board-header {
+  padding: 0 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.board-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: $text-main;
+}
+
+.kanban-board {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: flex-start;
+  padding-bottom: 24px;
+}
+
+.kanban-column {
+  background-color: $bg-panel;
+  border-radius: 12px;
+  width: 320px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $border-color;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      background-color 0.45s ease,
+      border-color 0.45s ease;
+  }
+}
+
+.column-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid $border-color;
+}
+
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  color: $text-main;
+}
+
+.column-count {
+  background-color: $bg-card;
+  color: $text-muted;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.col-applied .dot {
+  background-color: $status-applied;
+  box-shadow: 0 0 8px $status-applied;
+}
+
+.col-interview .dot {
+  background-color: $status-interview;
+  box-shadow: 0 0 8px $status-interview;
+}
+
+.col-offer .dot {
+  background-color: $status-offer;
+  box-shadow: 0 0 8px $status-offer;
+}
+
+.column-content {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 150px;
+}
+
+.kanban-card {
+  position: relative;
+  background-color: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: 16px;
+  padding-top: 36px;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      transform 0.2s,
+      border-color 0.2s,
+      box-shadow 0.2s,
+      background-color 0.45s ease;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.btn-cancel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-family: inherit;
+  color: $text-muted;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.12);
+  }
+}
+
+.column-content.drop-target {
+  outline: 2px dashed $primary;
+  outline-offset: -2px;
+  background: rgba(6, 182, 212, 0.05);
+}
+
+.kanban-card:hover {
+  border-color: $primary;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-company {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.company-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #000;
+  font-size: 12px;
+}
+
+.company-name {
+  font-size: 13px;
+  color: $text-muted;
+  font-weight: 500;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  color: $text-main;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid $border-color;
+  padding-top: 12px;
+  font-size: 12px;
+  color: $text-muted;
+}
+
+.match-score {
+  color: $status-offer;
+  font-weight: 600;
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 48px 24px;
+  color: $text-muted;
+}
+
+.empty-hint p {
+  margin-bottom: 16px;
+}
+
+.btn-primary {
+  background-color: $primary;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #0891b2;
+}
+
+:host-context(html.theme-light) {
+  .candidaturas-view {
+    background: #f1f5f9;
+  }
+
+  .board-header h2 {
+    color: #0f172a;
+  }
+
+  .kanban-column {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+  }
+
+  .column-header {
+    border-bottom-color: #e2e8f0;
+  }
+
+  .column-title {
+    color: #0f172a;
+  }
+
+  .column-count {
+    background-color: #e2e8f0;
+    color: #64748b;
+  }
+
+  .kanban-card {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+  }
+
+  .btn-cancel:hover {
+    background: rgba(248, 113, 113, 0.08);
+  }
+
+  .company-name {
+    color: #64748b;
+  }
+
+  .card-title {
+    color: #0f172a;
+  }
+
+  .card-footer {
+    border-top-color: #e2e8f0;
+    color: #64748b;
+  }
+
+  .empty-hint {
+    color: #64748b;
+  }
+}

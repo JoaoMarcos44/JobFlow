@@ -4,5 +4,12 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/codante-api": {
+    "target": "https://apis.codante.io",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/codante-api": "" },
+    "logLevel": "debug"
   }
 }

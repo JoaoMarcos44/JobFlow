@@ -1,6 +1,9 @@
 package com.jobflow.backend.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -22,7 +25,7 @@ public class Resume {
     @Column(name = "content_type", nullable = false, length = 100)
     private String contentType;
 
-    @Lob
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     @Column(name = "file_content", nullable = false)
     private byte[] fileContent;
 

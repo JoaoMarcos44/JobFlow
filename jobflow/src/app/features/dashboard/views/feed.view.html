@@ -1,0 +1,247 @@
+<div class="feed">
+  @if (saveFeedbackVisibleReadonly()) {
+    <div class="save-toast" role="status">Vaga guardada. Consulte Candidaturas.</div>
+  }
+  <header class="feed-header">
+    <h1>Feed de Vagas</h1>
+    <p class="subtitle">Vagas da API Codante. Clique em uma vaga para ver detalhes e gerir a candidatura.</p>
+  </header>
+
+  <div class="toolbar">
+    <input
+      type="text"
+      class="input"
+      placeholder="Buscar por título, empresa ou cidade..."
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+      (keydown.enter)="onSearch()"
+    />
+    <button type="button" class="btn btn-primary" (click)="onSearch()" [disabled]="loading()">
+      Buscar
+    </button>
+  </div>
+
+  <section class="filter-bar" aria-label="Filtros de vagas">
+    <div class="filter-groups-inline">
+      <div class="filter-group filter-group--inline">
+        <span class="filter-label">Vínculo</span>
+        <div class="filter-chips" role="group">
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="scheduleCategory() === 'all'"
+            (click)="setScheduleCategory('all')"
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="scheduleCategory() === 'internship'"
+            (click)="setScheduleCategory('internship')"
+          >
+            Estágio
+          </button>
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="scheduleCategory() === 'employment'"
+            (click)="setScheduleCategory('employment')"
+          >
+            Emprego
+          </button>
+        </div>
+      </div>
+      <div class="filter-group filter-group-modo filter-group--inline">
+        <span class="filter-label">Modo</span>
+        <div class="filter-chips filter-chips-with-actions" role="group">
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="workModeFilter() === 'all'"
+            (click)="setWorkModeFilter('all')"
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="workModeFilter() === 'remote'"
+            (click)="setWorkModeFilter('remote')"
+          >
+            Remoto
+          </button>
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="workModeFilter() === 'onsite'"
+            (click)="setWorkModeFilter('onsite')"
+          >
+            Presencial
+          </button>
+          <button
+            type="button"
+            class="filter-chip"
+            [class.active]="workModeFilter() === 'hybrid'"
+            (click)="setWorkModeFilter('hybrid')"
+          >
+            Híbrido
+          </button>
+          <span class="filter-chips-actions">
+            @if (hasActiveFilters()) {
+              <button
+                type="button"
+                class="btn btn-outline btn-clear-filters"
+                (click)="clearFilters()"
+                title="Limpar todos os filtros"
+                aria-label="Limpar todos os filtros"
+              >
+                Limpar
+              </button>
+            }
+            <button
+              type="button"
+              class="filter-skills-toggle"
+              [class.open]="skillsPanelOpen()"
+              [class.has-skills-selected]="selectedSkillIds().length > 0"
+              [attr.aria-expanded]="skillsPanelOpen()"
+              aria-controls="feed-skills-panel"
+              (click)="toggleSkillsPanel()"
+              [title]="skillsPanelOpen() ? 'Ocultar habilidades' : 'Mostrar filtros por habilidades'"
+            >
+              <svg
+                class="filter-skills-chevron"
+                xmlns="http://www.w3.org/2000/svg"
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span class="visually-hidden">
+                {{ skillsPanelOpen() ? 'Ocultar painel de habilidades' : 'Mostrar painel de habilidades' }}
+              </span>
+              @if (selectedSkillIds().length > 0) {
+                <span class="filter-skills-badge" aria-hidden="true">{{ selectedSkillIds().length }}</span>
+              }
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+    @if (skillsPanelOpen()) {
+      <div id="feed-skills-panel" class="filter-group filter-group-skills">
+        <span class="filter-label">Habilidades</span>
+        <p class="filter-hint">Mencionadas nos requisitos ou descrição (várias = todas obrigatórias).</p>
+        <div class="filter-chips" role="group">
+          @for (opt of skillFilterOptions; track opt.id) {
+            <button
+              type="button"
+              class="filter-chip filter-chip-skill"
+              [class.active]="isSkillFilterSelected(opt.id)"
+              (click)="toggleSkillFilter(opt.id)"
+            >
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  @if (loading()) {
+    <div class="state-wrap loading">
+      <div class="spinner"></div>
+      <p>A carregar vagas...</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-wrap error">
+      <p>Não foi possível carregar as vagas. Verifique a ligação e tente novamente.</p>
+      <button type="button" class="btn btn-outline" (click)="loadJobs()">Tentar novamente</button>
+    </div>
+  } @else {
+    <div class="results-meta">
+      @if (meta(); as m) {
+        <span>
+          @if (hasActiveFilters()) {
+            <strong>{{ filteredJobs().length }}</strong> vaga(s) nesta página com os filtros ·
+          }
+          {{ m.total }} no total da API — página {{ m.current_page }} de {{ m.last_page }}
+        </span>
+      }
+    </div>
+
+    <div class="cards">
+      @for (job of filteredJobs(); track job.id) {
+        <article class="card">
+          <div class="card-main" (click)="openJob(job)" role="button" tabindex="0" (keydown.enter)="openJob(job)">
+            <div class="card-header">
+              <div class="company-avatar">{{ companyInitial(job.company) }}</div>
+              <span class="card-company">{{ job.company }}</span>
+            </div>
+            <h2 class="card-title">{{ job.title }}</h2>
+            <div class="card-tags">
+              @if (job.schedule) {
+                <span class="pill">{{ scheduleLabel(job.schedule) }}</span>
+              }
+              @if (job.city) {
+                <span class="pill">{{ job.city }}</span>
+              }
+              @for (tech of tagsFromJob(job); track tech) {
+                <span class="pill">{{ tech }}</span>
+              }
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="footer-label">Vaga</span>
+            @if (isSaved(job)) {
+              <span class="btn btn-save saved">Salvo</span>
+            } @else {
+              <button type="button" class="btn btn-save" (click)="saveJob($event, job)">Salvar</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (meta(); as m) {
+      @if (m.last_page > 1) {
+        <nav class="pagination">
+          <button
+            type="button"
+            class="btn btn-sm"
+            [disabled]="m.current_page <= 1"
+            (click)="goToPage(m.current_page - 1)"
+          >
+            Anterior
+          </button>
+          <span class="page-info">Página {{ m.current_page }} de {{ m.last_page }}</span>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [disabled]="m.current_page >= m.last_page"
+            (click)="goToPage(m.current_page + 1)"
+          >
+            Próxima
+          </button>
+        </nav>
+      }
+    }
+
+    @if (filteredJobs().length === 0) {
+      <p class="empty">
+        @if (jobs().length === 0) {
+          Nenhuma vaga nesta página.
+        } @else {
+          Nenhuma vaga corresponde aos filtros nesta página.
+        }
+      </p>
+    }
+  }
+</div>

@@ -1,13 +1,33 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+  { path: '', pathMatch: 'full', redirectTo: 'welcome' },
+  {
+    path: 'welcome',
+    loadComponent: () =>
+      import('./features/welcome/welcome.component').then((m) => m.WelcomeComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./features/auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'recuperar-conta',
+    loadComponent: () =>
+      import('./features/auth/recuperar-conta.component').then((m) => m.RecuperarContaComponent),
+  },
   {
     path: 'dashboard',
     loadComponent: () =>
       import('./features/dashboard/dashboard-layout.component').then((m) => m.DashboardLayoutComponent),
     children: [
-      { path: '', redirectTo: 'candidaturas', pathMatch: 'full' },
+      { path: '', redirectTo: 'feed', pathMatch: 'full' },
       {
         path: 'feed',
         loadComponent: () =>
@@ -35,5 +55,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  { path: '**', redirectTo: 'welcome' },
 ];

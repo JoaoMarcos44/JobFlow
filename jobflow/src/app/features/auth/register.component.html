@@ -1,0 +1,87 @@
+<div class="login-page">
+  <div class="login-card auth-anim-card">
+    <div class="brand auth-anim-brand">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <polyline points="16 11 18 13 22 9"></polyline>
+        </svg>
+      </div>
+      <h1>JobFlow</h1>
+      <p class="tagline">Crie a sua conta e comece a organizar as suas candidaturas.</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #form="ngForm">
+      <div class="form-group auth-anim-field">
+        <label for="reg-name">Nome (opcional)</label>
+        <input
+          type="text"
+          id="reg-name"
+          name="name"
+          [(ngModel)]="name"
+          placeholder="O seu nome"
+          autocomplete="name"
+        />
+      </div>
+      <div class="form-group auth-anim-field">
+        <label for="reg-email">E-mail</label>
+        <input
+          type="email"
+          id="reg-email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="dev@exemplo.com"
+          required
+          autocomplete="email"
+          [class.is-invalid]="message()?.type === 'error'"
+        />
+      </div>
+      <div class="form-group auth-anim-field">
+        <label for="reg-password">Palavra-passe</label>
+        <input
+          type="password"
+          id="reg-password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          required
+          minlength="6"
+          autocomplete="new-password"
+          [class.is-invalid]="message()?.type === 'error'"
+        />
+      </div>
+      <div class="form-group auth-anim-field">
+        <label for="reg-password2">Confirmar palavra-passe</label>
+        <input
+          type="password"
+          id="reg-password2"
+          name="passwordConfirm"
+          [(ngModel)]="passwordConfirm"
+          placeholder="Repita a palavra-passe"
+          required
+          minlength="6"
+          autocomplete="new-password"
+          [class.is-invalid]="message()?.type === 'error'"
+        />
+      </div>
+      <button type="submit" class="btn-primary auth-anim-submit" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner"></span>
+        } @else {
+          Criar conta
+        }
+      </button>
+    </form>
+
+    <div class="register-prompt auth-anim-footer">
+      Já tem conta? <a routerLink="/login">Entrar</a>
+    </div>
+  </div>
+
+  @if (message(); as msg) {
+    <div class="toast" [class.toast-error]="msg.type === 'error'" [class.toast-success]="msg.type === 'success'">
+      {{ msg.text }}
+    </div>
+  }
+</div>
