@@ -1293,11 +1293,15 @@
                                 if (status === 'offer') colOffer.appendChild(card);
                                 else if (status === 'applied') colInterview.appendChild(card);
                                 else colApplied.appendChild(card);
-                            } catch (e) { console.warn('Card build skip', saved, e); }
+                            } catch {
+                                /* skip invalid card */
+                            }
                         });
                         updateCounts();
                         attachDragDrop();
-                    } catch (e) { console.warn('loadSavedJobs error', e); }
+                    } catch {
+                        /* load failed silently */
+                    }
                 }
 
                 function updateCounts() {

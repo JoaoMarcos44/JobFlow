@@ -30,10 +30,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = header.substring(7).trim();
             try {
                 Claims claims = jwt.parseClaims(token);
-                String email = claims.get("email", String.class);
-
-                var auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                String email = claims.getSubject();
+                if (email == null || email.isBlank() || !email.contains("@")) {
+                    String legacy = claims.get("email", String.class);
+                    if (legacy != null && !legacy.isBlank()) {
+                        email = legacy;
+                    }
+                }
+                if (email != null && !email.isBlank()) {
+                    var auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             } catch (Exception ignored) {
                 // invalid token -> no auth set; request may be rejected later
             }

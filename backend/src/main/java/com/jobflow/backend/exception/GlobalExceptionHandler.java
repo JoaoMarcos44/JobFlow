@@ -1,5 +1,7 @@
 package com.jobflow.backend.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,6 +11,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleUnauthorized(InvalidCredentialsException e) {
@@ -22,8 +26,13 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Conflict"));
     }
 
+    /**
+     * Do not echo internal messages (e.g. user enumeration, validation internals) to clients.
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Bad request"));
+        log.debug("Bad request", e);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Pedido inválido."));
     }
 }
