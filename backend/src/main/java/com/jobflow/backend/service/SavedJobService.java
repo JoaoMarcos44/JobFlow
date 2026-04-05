@@ -1,6 +1,7 @@
 package com.jobflow.backend.service;
 
 import com.jobflow.backend.dto.JobResponse;
+import com.jobflow.backend.dto.SaveSavedJobFromCodanteRequest;
 import com.jobflow.backend.dto.SavedJobRequest;
 import com.jobflow.backend.dto.SavedJobResponse;
 import com.jobflow.backend.model.Job;
@@ -38,6 +39,11 @@ public class SavedJobService {
     public Optional<SavedJobResponse> getById(User user, UUID savedJobId) {
         return savedJobRepository.findByUserIdAndIdWithJob(user.getId(), savedJobId)
                 .map(this::toResponse);
+    }
+
+    public SavedJobResponse saveFromCodante(User user, SaveSavedJobFromCodanteRequest body) {
+        Job job = jobService.upsertJobFromCodante(body.codanteJob());
+        return save(user, new SavedJobRequest(job.getId(), body.notes(), body.status()));
     }
 
     public SavedJobResponse save(User user, SavedJobRequest request) {
@@ -82,7 +88,7 @@ public class SavedJobService {
                 j.getId(), j.getTitle(), j.getCompany(), j.getLocation(),
                 j.getDescription(), j.getRequirements(), j.getBenefits(),
                 j.getTechnologies() != null ? j.getTechnologies() : java.util.List.of(),
-                j.getSourceUrl(), j.getPostedDate(), s.getMatchScore()
+                j.getSourceUrl(), j.getPostedDate(), j.getCodanteId(), s.getMatchScore()
         );
         return new SavedJobResponse(s.getId(), jobResp, s.getNotes(), s.getMatchScore(), s.getStatus(), s.getSavedAt(), s.getUpdatedAt());
     }

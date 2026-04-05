@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FeedViewComponent } from './feed.view';
 import { JobBoardService, CodanteJob, JobListResponse } from '../../../core/services/job-board.service';
+import { SavedJobsService } from '../../../core/services/saved-jobs.service';
 
 vi.mock('../dashboard.animations', () => ({
   createDashboardViewStagger: () => ({ revert: vi.fn() }),
@@ -69,7 +70,17 @@ describe('FeedViewComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [FeedViewComponent],
-      providers: [provideRouter([]), { provide: JobBoardService, useValue: { getJobs } }],
+      providers: [
+        provideRouter([]),
+        { provide: JobBoardService, useValue: { getJobs } },
+        {
+          provide: SavedJobsService,
+          useValue: {
+            addJob: vi.fn().mockReturnValue(of(true)),
+            isSaved: vi.fn().mockReturnValue(false),
+          },
+        },
+      ],
     });
   });
 

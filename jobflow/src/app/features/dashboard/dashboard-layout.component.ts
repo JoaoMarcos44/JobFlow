@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { SavedJobsService } from '../../core/services/saved-jobs.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { createDashboardShellEntrance } from './dashboard.animations';
 
@@ -21,6 +22,7 @@ import { createDashboardShellEntrance } from './dashboard.animations';
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
+  private readonly savedJobsApi = inject(SavedJobsService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
   private readonly host = inject(ElementRef<HTMLElement>);
@@ -44,6 +46,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadProfile();
+    this.savedJobsApi.reloadFromApi();
   }
 
   ngOnDestroy(): void {

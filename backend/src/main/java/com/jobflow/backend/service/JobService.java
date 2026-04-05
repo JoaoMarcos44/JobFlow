@@ -1,5 +1,6 @@
 package com.jobflow.backend.service;
 
+import com.jobflow.backend.dto.CodanteJobPayload;
 import com.jobflow.backend.dto.JobResponse;
 import com.jobflow.backend.dto.MatchResponse;
 import com.jobflow.backend.model.Job;
@@ -9,11 +10,12 @@ import com.jobflow.backend.repository.JobRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class JobService {
@@ -58,6 +60,31 @@ public class JobService {
         return jobRepository.findById(jobId);
     }
 
+    @Transactional
+    public Job upsertJobFromCodante(CodanteJobPayload p) {
+        Job j = jobRepository.findByCodanteId(p.id()).orElseGet(() -> {
+            Job n = new Job(p.title(), p.company());
+            n.setCodanteId(p.id());
+            return n;
+        });
+        j.setTitle(p.title());
+        j.setCompany(p.company());
+        j.setLocation(p.city() != null ? p.city() : "");
+        j.setDescription(p.description() != null ? p.description() : "");
+        j.setRequirements(p.requirements() != null ? p.requirements() : "");
+        if (p.companyWebsite() != null && !p.companyWebsite().isBlank()) {
+            j.setSourceUrl(p.companyWebsite());
+        }
+        if (p.createdAt() != null && p.createdAt().length() >= 10) {
+            try {
+                j.setPostedDate(LocalDate.parse(p.createdAt().substring(0, 10)));
+            } catch (Exception ignored) {
+                // mantém postedDate
+            }
+        }
+        return jobRepository.save(j);
+    }
+
     private static JobResponse toResponse(Job j, Integer matchScore) {
         return new JobResponse(
                 j.getId(),
@@ -70,6 +97,7 @@ public class JobService {
                 j.getTechnologies() != null ? j.getTechnologies() : List.of(),
                 j.getSourceUrl(),
                 j.getPostedDate(),
+                j.getCodanteId(),
                 matchScore
         );
     }

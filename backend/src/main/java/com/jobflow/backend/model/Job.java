@@ -8,12 +8,18 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "jobs")
+@Table(name = "jobs", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_jobs_codante_id", columnNames = "codante_id")
+})
 public class Job {
 
     @Id
     @GeneratedValue
     private UUID id;
+
+    /** ID na API Codante quando a vaga é importada ao guardar no feed. */
+    @Column(name = "codante_id", unique = true)
+    private Integer codanteId;
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -73,4 +79,7 @@ public class Job {
     public LocalDate getPostedDate() { return postedDate; }
     public void setPostedDate(LocalDate postedDate) { this.postedDate = postedDate; }
     public Instant getCreatedAt() { return createdAt; }
+
+    public Integer getCodanteId() { return codanteId; }
+    public void setCodanteId(Integer codanteId) { this.codanteId = codanteId; }
 }

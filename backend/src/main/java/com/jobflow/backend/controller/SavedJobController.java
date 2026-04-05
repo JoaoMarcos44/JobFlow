@@ -1,5 +1,6 @@
 package com.jobflow.backend.controller;
 
+import com.jobflow.backend.dto.SaveSavedJobFromCodanteRequest;
 import com.jobflow.backend.dto.SavedJobRequest;
 import com.jobflow.backend.dto.SavedJobResponse;
 import com.jobflow.backend.model.User;
@@ -48,6 +49,23 @@ public class SavedJobController {
         User user = currentUser(auth);
         try {
             return ResponseEntity.ok(savedJobService.save(user, request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Importa/atualiza {@link com.jobflow.backend.model.Job} a partir do feed Codante e cria {@code saved_jobs}
+     * (relação utilizador ↔ vaga).
+     */
+    @PostMapping("/from-codante")
+    public ResponseEntity<SavedJobResponse> saveFromCodante(
+            @Valid @RequestBody SaveSavedJobFromCodanteRequest body,
+            Authentication auth
+    ) {
+        User user = currentUser(auth);
+        try {
+            return ResponseEntity.ok(savedJobService.saveFromCodante(user, body));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }

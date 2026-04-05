@@ -1,4 +1,4 @@
-import { Component, inject, ElementRef, afterNextRender, OnDestroy } from '@angular/core';
+import { Component, inject, ElementRef, afterNextRender, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ResumesService } from '../../../core/services/resumes.service';
@@ -11,10 +11,14 @@ import { createDashboardViewStagger } from '../dashboard.animations';
   templateUrl: './curriculos.view.html',
   styleUrls: ['./curriculos.view.scss'],
 })
-export class CurriculosViewComponent implements OnDestroy {
+export class CurriculosViewComponent implements OnInit, OnDestroy {
   private readonly resumes = inject(ResumesService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
+
+  ngOnInit(): void {
+    this.resumes.reloadFromApi();
+  }
 
   constructor() {
     afterNextRender(() => {
@@ -36,6 +40,7 @@ export class CurriculosViewComponent implements OnDestroy {
   message = '';
   messageSuccess = false;
   saving = false;
+  private replaceForId: string | null = null;
 
   readonly resumeList = this.resumes.list;
 
@@ -55,10 +60,15 @@ export class CurriculosViewComponent implements OnDestroy {
     }
     this.saving = true;
     this.message = '';
-    this.resumes.add(this.selectedFile).then(({ entry, error }) => {
+    this.resumes.add(this.selectedFile).subscribe((r) => {
       this.saving = false;
-      this.message = error ?? 'Currículo guardado com sucesso.';
-      this.messageSuccess = !error;
+      if (r.success) {
+        this.message = 'Currículo guardado com sucesso.';
+        this.messageSuccess = true;
+      } else {
+        this.message = r.error;
+        this.messageSuccess = false;
+      }
       this.selectedFile = null;
       this.selectedFileName = '';
       const input = document.getElementById('resume-file') as HTMLInputElement;
@@ -78,6 +88,36 @@ export class CurriculosViewComponent implements OnDestroy {
     event.stopPropagation();
     event.preventDefault();
     this.resumes.remove(id);
+  }
+
+  openReplace(id: string): void {
+    this.replaceForId = id;
+    const el = document.getElementById('resume-replace-file') as HTMLInputElement;
+    if (el) {
+      el.value = '';
+      el.click();
+    }
+  }
+
+  onReplaceSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const id = this.replaceForId;
+    this.replaceForId = null;
+    if (!file || !id) return;
+    this.saving = true;
+    this.message = '';
+    this.resumes.replace(id, file).subscribe((r) => {
+      this.saving = false;
+      if (r.success) {
+        this.message = 'Currículo atualizado.';
+        this.messageSuccess = true;
+      } else {
+        this.message = r.error;
+        this.messageSuccess = false;
+      }
+      input.value = '';
+    });
   }
 
   formatDate(iso: string): string {

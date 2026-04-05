@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { SavedJobsService, KanbanStatus } from '../../../core/services/saved-jobs.service';
+import { SavedJobsService, KanbanStatus, type SavedJobItem } from '../../../core/services/saved-jobs.service';
 import { animateElementsFrom, createDashboardViewStagger } from '../dashboard.animations';
 
 export interface KanbanCard {
@@ -71,12 +71,13 @@ export class CandidaturasViewComponent implements OnDestroy {
     this.savedJobs.savedJobs().filter((i) => i.status === 'offer').map(this.toCard)
   );
 
-  private toCard(item: { id: string; job: { title: string; company: string }; status: KanbanStatus }): KanbanCard {
+  private toCard(item: SavedJobItem): KanbanCard {
     return {
       id: item.id,
       title: item.job.title,
       company: item.job.company,
       status: item.status,
+      matchScore: item.matchScore ?? undefined,
     };
   }
 

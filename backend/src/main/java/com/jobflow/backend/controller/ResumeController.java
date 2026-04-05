@@ -63,6 +63,20 @@ public class ResumeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResumeSummaryResponse> replace(
+            Authentication auth,
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+        User user = currentUser(auth);
+        try {
+            return ResponseEntity.ok(resumeService.replace(user, id, file));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(Authentication auth, @PathVariable UUID id) {
         User user = currentUser(auth);

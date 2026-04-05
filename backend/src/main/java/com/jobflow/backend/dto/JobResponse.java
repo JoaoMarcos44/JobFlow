@@ -15,5 +15,6 @@ public record JobResponse(
         List<String> technologies,
         String sourceUrl,
         LocalDate postedDate,
+        Integer codanteId,
         Integer matchScore
 ) {}

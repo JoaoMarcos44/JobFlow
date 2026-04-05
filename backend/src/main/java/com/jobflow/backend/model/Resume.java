@@ -47,4 +47,8 @@ public class Resume {
     public String getContentType() { return contentType; }
     public byte[] getFileContent() { return fileContent; }
     public Instant getCreatedAt() { return createdAt; }
+
+    public void setFileName(String fileName) { this.fileName = fileName; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public void setFileContent(byte[] fileContent) { this.fileContent = fileContent; }
 }

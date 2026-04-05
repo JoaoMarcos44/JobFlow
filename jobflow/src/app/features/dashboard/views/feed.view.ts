@@ -190,10 +190,9 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   saveJob(event: Event, job: CodanteJob): void {
     event.stopPropagation();
     event.preventDefault();
-    const added = this.savedJobs.addJob(job);
-    if (added) {
-      this.showSaveFeedback();
-    }
+    this.savedJobs.addJob(job).subscribe((ok) => {
+      if (ok) this.showSaveFeedback();
+    });
   }
 
   isSaved(job: CodanteJob): boolean {

@@ -67,6 +67,33 @@ public class ResumeService {
     }
 
     @Transactional
+    public ResumeSummaryResponse replace(User user, UUID id, MultipartFile file) throws IOException {
+        Resume resume = resumeRepository.findByUserIdAndId(user.getId(), id)
+                .orElseThrow(() -> new IllegalArgumentException("Currículo não encontrado"));
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Ficheiro vazio");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("Ficheiro demasiado grande (máx. 10 MB)");
+        }
+        String contentType = file.getContentType();
+        boolean allowed = contentType != null && (ALLOWED_TYPES.contains(contentType)
+                || contentType.contains("pdf") || contentType.contains("wordprocessingml"));
+        if (!allowed) {
+            throw new IllegalArgumentException("Apenas PDF e DOCX são permitidos.");
+        }
+        String fileName = sanitizeFileName(file.getOriginalFilename());
+        if (fileName == null || fileName.isBlank()) {
+            fileName = resume.getFileName();
+        }
+        resume.setFileName(fileName);
+        resume.setContentType(contentType != null ? contentType : resume.getContentType());
+        resume.setFileContent(file.getBytes());
+        resumeRepository.save(resume);
+        return toSummary(resume);
+    }
+
+    @Transactional
     public boolean delete(User user, UUID id) {
         return resumeRepository.findByUserIdAndId(user.getId(), id)
                 .map(r -> {

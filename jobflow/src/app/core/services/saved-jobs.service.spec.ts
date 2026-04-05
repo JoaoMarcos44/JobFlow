@@ -1,9 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { firstValueFrom } from 'rxjs';
 import { SavedJobsService } from './saved-jobs.service';
 import type { CodanteJob } from './job-board.service';
 
-function job(id: number): CodanteJob {
+function codanteJob(id: number): CodanteJob {
   return {
     id,
     title: 'T',
@@ -19,59 +22,62 @@ function job(id: number): CodanteJob {
   };
 }
 
+function savedRow(id: string, codanteId: number, status = 'saved') {
+  return {
+    id,
+    job: {
+      id: 'job-uuid',
+      title: 'T',
+      company: 'C',
+      codanteId,
+    },
+    notes: null,
+    matchScore: 80,
+    status,
+    savedAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+  };
+}
+
 describe('SavedJobsService', () => {
-  let store: Record<string, string>;
+  let httpMock: HttpTestingController;
+  let service: SavedJobsService;
 
   beforeEach(() => {
-    store = {};
-    vi.stubGlobal('localStorage', {
-      getItem: (k: string) => store[k] ?? null,
-      setItem: (k: string, v: string) => {
-        store[k] = v;
-      },
-      removeItem: (k: string) => {
-        delete store[k];
-      },
-      clear: () => {
-        Object.keys(store).forEach((k) => delete store[k]);
-      },
-      length: 0,
-      key: () => null,
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     });
-    TestBed.configureTestingModule({});
+    service = TestBed.inject(SavedJobsService);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    httpMock.verify();
     TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
   });
 
-  it('caso de uso: adicionar vaga nova devolve true e passa a constar como guardada', () => {
-    const service = TestBed.inject(SavedJobsService);
-    expect(service.addJob(job(1))).toBe(true);
-    expect(service.isSaved(1)).toBe(true);
+  it('reloadFromApi preenche lista a partir de Page.content', () => {
+    service.reloadFromApi();
+    const req = httpMock.expectOne((r) => r.url.includes('/api/saved-jobs'));
+    expect(req.request.method).toBe('GET');
+    req.flush({ content: [savedRow('s1', 5)] });
     expect(service.getSavedJobs().length).toBe(1);
+    expect(service.isSaved(5)).toBe(true);
   });
 
-  it('caso de uso: adicionar a mesma vaga duas vezes devolve false', () => {
-    const service = TestBed.inject(SavedJobsService);
-    expect(service.addJob(job(2))).toBe(true);
-    expect(service.addJob(job(2))).toBe(false);
-    expect(service.getSavedJobs().length).toBe(1);
+  it('addJob POST /from-codante e devolve true', async () => {
+    const p = firstValueFrom(service.addJob(codanteJob(9)));
+    const req = httpMock.expectOne((r) => r.url.endsWith('/from-codante'));
+    expect(req.request.method).toBe('POST');
+    req.flush(savedRow('new-id', 9));
+    expect(await p).toBe(true);
+    expect(service.isSaved(9)).toBe(true);
   });
 
-  it('caso de uso: removeJob remove o item', () => {
-    const service = TestBed.inject(SavedJobsService);
-    service.addJob(job(3));
-    service.removeJob('codante-3');
-    expect(service.isSaved(3)).toBe(false);
-    expect(service.getSavedJobs().length).toBe(0);
-  });
-
-  it('caso de uso: updateStatus altera o estado Kanban', () => {
-    const service = TestBed.inject(SavedJobsService);
-    service.addJob(job(4));
-    service.updateStatus('codante-4', 'applied');
-    expect(service.getSavedJobs()[0].status).toBe('applied');
+  it('addJob em erro devolve false', async () => {
+    const p = firstValueFrom(service.addJob(codanteJob(9)));
+    httpMock.expectOne((r) => r.url.includes('from-codante')).flush({}, { status: 400, statusText: 'Bad' });
+    expect(await p).toBe(false);
   });
 });

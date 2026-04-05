@@ -3,7 +3,8 @@
     <h2>Currículos</h2>
   </div>
   <div class="curriculos-content">
-    <p class="intro">Envie o seu currículo em PDF ou DOCX para guardar no site.</p>
+    <input type="file" id="resume-replace-file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden (change)="onReplaceSelected($event)">
+    <p class="intro">Envie o seu currículo em PDF ou DOCX para guardar na base de dados (servidor JobFlow).</p>
     <form (ngSubmit)="onSubmit()" class="upload-form">
       <div class="upload-zone">
         <input type="file" id="resume-file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" (change)="onFileSelected($event)" #fileInput hidden>
@@ -39,6 +40,9 @@
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
               }
+              <button type="button" class="btn-download" (click)="openReplace(entry.id)" title="Substituir ficheiro" [disabled]="saving">
+                Atualizar
+              </button>
             </span>
           </li>
         }
