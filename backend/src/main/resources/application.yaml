@@ -20,3 +20,8 @@ app:
     secret: "lZANVaiDZmaCPeQQBuNomKll43rCrqZZ"
     issuer: "jobflow"
     ttlMinutes: 60
+  dev:
+    seedAdmin: true
+    adminEmail: "admin@jobflow.com"
+    adminPassword: "admin"
+    resetAdminPassword: true

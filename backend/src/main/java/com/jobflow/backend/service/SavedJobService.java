@@ -64,7 +64,8 @@ public class SavedJobService {
     }
 
     public Optional<SavedJobResponse> update(User user, UUID savedJobId, String notes, String status) {
-        return savedJobRepository.findByUserIdAndId(user.getId(), savedJobId)
+        // Fetch join Job to avoid LazyInitializationException when mapping response (open-in-view is false).
+        return savedJobRepository.findByUserIdAndIdWithJob(user.getId(), savedJobId)
                 .map(s -> {
                     if (notes != null) s.setNotes(notes);
                     if (status != null && !status.isBlank()) s.setStatus(status.trim());
