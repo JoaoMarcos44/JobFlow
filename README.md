@@ -4,6 +4,10 @@ Aplicação web para acompanhar **vagas de emprego**, **guardar ofertas** (inclu
 
 O repositório é um monólito em duas partes: **frontend Angular** e **backend Spring Boot** com **PostgreSQL**.
 
+### Repositório público (projeto universitário)
+
+Como este repositório é **público**, trate qualquer valor em `application.yaml` como **apenas exemplo / desenvolvimento local**. O ficheiro passou a ler **variáveis de ambiente** (lista em `backend/env.example`). Para trabalho na tua máquina podes usar os valores por defeito; **antes de alojar algures na internet**, define um `JWT_SECRET` forte e credenciais de base de dados tuas (`openssl rand -base64 48` é um exemplo comum para o segredo). O histórico do Git pode ainda conter segredos antigos — há que **substituí-los por novos valores** se alguma vez foram considerados válidos.
+
 ---
 
 ## O que o projeto faz
@@ -59,7 +63,7 @@ docker compose up -d
 
 Isto sobe o Postgres com base `jobflow`, utilizador e palavra-passe configurados para desenvolvimento (ver `backend/docker-compose.yaml`).
 
-Os dados de ligação usados pela aplicação estão em `backend/src/main/resources/application.yaml`. Ajuste `spring.datasource.*` se mudar utilizador, palavra-passe ou host.
+Os valores de ligação da aplicação vêm das variáveis `SPRING_DATASOURCE_*` (ver `backend/env.example`); por defeito coincidem com o `docker-compose.yaml`. Ajuste env ou Compose se mudar utilizador, palavra-passe ou host.
 
 O Hibernate está configurado com `ddl-auto: update` para desenvolvimento (esquema evolui com as entidades).
 
@@ -77,9 +81,13 @@ Na pasta `backend`:
 
 A API fica por defeito em **http://localhost:8080**.
 
+### Variáveis de ambiente
+
+Consulte **`backend/env.example`**. Um padrão simples é copiar para **`backend/.env`** (ignored pelo Git), carregar esse ficheiro na shell que corre o Maven, ou definir as variáveis manualmente antes de `./mvnw spring-boot:run`.
+
 ### Utilizador de desenvolvimento
 
-Com `app.dev.seedAdmin: true`, o projeto pode criar/repor um administrador de desenvolvimento (email e palavra-passe definidos em `application.yaml`). **Não use estas credenciais ou o segredo JWT em produção** — substitua por variáveis de ambiente ou perfis seguros.
+Com `JOBFLOW_DEV_SEED_ADMIN=true` (valor por defeito), o projeto cria/atualiza um utilizador de demo (`JOBFLOW_DEV_ADMIN_EMAIL` / `JOBFLOW_DEV_ADMIN_PASSWORD`). Adequado para clone local público — **troque sempre o `JWT_SECRET` e estas credenciais** se montar algo acessível fora da tua máquina.
 
 ### Endpoints principais (prefixo `/api`)
 

@@ -1,11 +1,15 @@
+# Configuração para desenvolvimento local.
+# Projeto público (universidade): não coloque aqui dados reais de produção.
+# Segredos e overrides locais recomendados: variáveis de ambiente — ver backend/env.example
+#
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/jobflow
-    username: jobflow
-    password: jobflow
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jobflow}
+    username: ${SPRING_DATASOURCE_USERNAME:jobflow}
+    password: ${SPRING_DATASOURCE_PASSWORD:jobflow}
   jpa:
     hibernate:
       ddl-auto: update
@@ -17,11 +21,11 @@ spring:
 
 app:
   jwt:
-    secret: "lZANVaiDZmaCPeQQBuNomKll43rCrqZZ"
-    issuer: "jobflow"
-    ttlMinutes: 60
+    secret: ${JWT_SECRET:jobflow-uni-public-demo-only-minimum-256-bit-hmac-placeholder!!}
+    issuer: ${JOBFLOW_JWT_ISSUER:jobflow}
+    ttlMinutes: ${JOBFLOW_JWT_TTL_MINUTES:60}
   dev:
-    seedAdmin: true
-    adminEmail: "admin@jobflow.com"
-    adminPassword: "admin"
-    resetAdminPassword: true
+    seedAdmin: ${JOBFLOW_DEV_SEED_ADMIN:true}
+    adminEmail: ${JOBFLOW_DEV_ADMIN_EMAIL:admin@jobflow.com}
+    adminPassword: ${JOBFLOW_DEV_ADMIN_PASSWORD:admin}
+    resetAdminPassword: ${JOBFLOW_DEV_RESET_ADMIN_PASSWORD:true}

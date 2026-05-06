@@ -33,8 +33,10 @@ Thumbs.db
 /package-lock.json
 /yarn.lock
 
-# Environment files
+# Environment files — secrets locais / produção não versionados
 /.env
+backend/.env
+.env.local
 
 # Angular CLI and build artefacts
 /.angular-cli.json
