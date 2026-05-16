@@ -16,22 +16,22 @@ import java.util.UUID;
 @Service
 public class ResumeService {
 
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-    private static final List<String> ALLOWED_TYPES = List.of(
+    private static final long MAX_BYTES = 10 * 1024 * 1024;
+    private static final List<String> KNOWN_TYPES = List.of(
             "application/pdf",
             "application/x-pdf",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" // .docx
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     );
 
-    private final ResumeRepository resumeRepository;
+    private final ResumeRepository resumes;
 
-    public ResumeService(ResumeRepository resumeRepository) {
-        this.resumeRepository = resumeRepository;
+    public ResumeService(ResumeRepository resumes) {
+        this.resumes = resumes;
     }
 
     @Transactional(readOnly = true)
     public List<ResumeSummaryResponse> listByUser(User user) {
-        return resumeRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
+        return resumes.findByUserIdOrderByCreatedAtDesc(user.getId())
                 .stream()
                 .map(this::toSummary)
                 .toList();
@@ -39,76 +39,94 @@ public class ResumeService {
 
     @Transactional(readOnly = true)
     public Optional<Resume> getById(User user, UUID id) {
-        return resumeRepository.findByUserIdAndId(user.getId(), id);
+        return resumes.findByUserIdAndId(user.getId(), id);
     }
 
     @Transactional
     public ResumeSummaryResponse upload(User user, MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("Ficheiro vazio");
-        }
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("Ficheiro demasiado grande (máx. 10 MB)");
-        }
+        assertValidFile(file, true);
         String contentType = file.getContentType();
-        boolean allowed = contentType != null && (ALLOWED_TYPES.contains(contentType)
-                || contentType.contains("pdf") || contentType.contains("wordprocessingml"));
-        if (!allowed) {
-            throw new IllegalArgumentException("Apenas PDF e DOCX são permitidos. Recebido: " + contentType);
-        }
-        String fileName = sanitizeFileName(file.getOriginalFilename());
-        if (fileName == null || fileName.isBlank()) {
-            fileName = "curriculo." + (contentType.contains("pdf") ? "pdf" : "docx");
-        }
-        byte[] content = file.getBytes();
-        Resume resume = new Resume(user, fileName, contentType, content);
-        resumeRepository.save(resume);
+        String fileName = fileNameOrDefault(file, contentType, defaultNameFor(contentType));
+        Resume resume = new Resume(user, fileName, contentType, file.getBytes());
+        resumes.save(resume);
         return toSummary(resume);
     }
 
     @Transactional
     public ResumeSummaryResponse replace(User user, UUID id, MultipartFile file) throws IOException {
-        Resume resume = resumeRepository.findByUserIdAndId(user.getId(), id)
+        Resume resume = resumes.findByUserIdAndId(user.getId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Currículo não encontrado"));
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("Ficheiro vazio");
-        }
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("Ficheiro demasiado grande (máx. 10 MB)");
-        }
+        assertValidFile(file, false);
         String contentType = file.getContentType();
-        boolean allowed = contentType != null && (ALLOWED_TYPES.contains(contentType)
-                || contentType.contains("pdf") || contentType.contains("wordprocessingml"));
-        if (!allowed) {
-            throw new IllegalArgumentException("Apenas PDF e DOCX são permitidos.");
-        }
-        String fileName = sanitizeFileName(file.getOriginalFilename());
-        if (fileName == null || fileName.isBlank()) {
-            fileName = resume.getFileName();
-        }
+        String fileName = fileNameOrDefault(file, contentType, resume.getFileName());
         resume.setFileName(fileName);
         resume.setContentType(contentType != null ? contentType : resume.getContentType());
         resume.setFileContent(file.getBytes());
-        resumeRepository.save(resume);
+        resumes.save(resume);
         return toSummary(resume);
     }
 
     @Transactional
     public boolean delete(User user, UUID id) {
-        return resumeRepository.findByUserIdAndId(user.getId(), id)
+        return resumes.findByUserIdAndId(user.getId(), id)
                 .map(r -> {
-                    resumeRepository.delete(r);
+                    resumes.delete(r);
                     return true;
                 })
                 .orElse(false);
     }
 
-    private ResumeSummaryResponse toSummary(Resume r) {
-        return new ResumeSummaryResponse(r.getId(), r.getFileName(), r.getContentType(), r.getCreatedAt());
+    private void assertValidFile(MultipartFile file, boolean includeReceivedTypeInError) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Ficheiro vazio");
+        }
+        if (file.getSize() > MAX_BYTES) {
+            throw new IllegalArgumentException("Ficheiro demasiado grande (máx. 10 MB)");
+        }
+        String contentType = file.getContentType();
+        if (!isAllowedType(contentType)) {
+            if (includeReceivedTypeInError) {
+                throw new IllegalArgumentException("Apenas PDF e DOCX são permitidos. Recebido: " + contentType);
+            }
+            throw new IllegalArgumentException("Apenas PDF e DOCX são permitidos.");
+        }
+    }
+
+    private static boolean isAllowedType(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        return KNOWN_TYPES.contains(contentType)
+                || contentType.contains("pdf")
+                || contentType.contains("wordprocessingml");
+    }
+
+    private static String fileNameOrDefault(MultipartFile file, String contentType, String whenBlank) {
+        String cleaned = sanitizeFileName(file.getOriginalFilename());
+        if (cleaned == null || cleaned.isBlank()) {
+            return whenBlank;
+        }
+        return cleaned;
+    }
+
+    private static String defaultNameFor(String contentType) {
+        boolean pdf = contentType != null && contentType.contains("pdf");
+        return "curriculo." + (pdf ? "pdf" : "docx");
+    }
+
+    private ResumeSummaryResponse toSummary(Resume resume) {
+        return new ResumeSummaryResponse(
+                resume.getId(),
+                resume.getFileName(),
+                resume.getContentType(),
+                resume.getCreatedAt()
+        );
     }
 
     private static String sanitizeFileName(String name) {
-        if (name == null) return null;
+        if (name == null) {
+            return null;
+        }
         return name.replaceAll("[^a-zA-Z0-9._\\-\\s]", "_").trim();
     }
 }

@@ -3,6 +3,7 @@ package com.jobflow.backend.service;
 import com.jobflow.backend.dto.CodanteJobPayload;
 import com.jobflow.backend.dto.JobResponse;
 import com.jobflow.backend.dto.MatchResponse;
+import com.jobflow.backend.mapper.JobMapper;
 import com.jobflow.backend.model.Job;
 import com.jobflow.backend.model.MatchAnalysis;
 import com.jobflow.backend.model.User;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,32 +28,37 @@ public class JobService {
         this.matchService = matchService;
     }
 
-    public Page<JobResponse> getFeed(User user, String technologyFilter, Pageable pageable) {
+    /** {@code technology} reservado para filtro futuro; hoje a lista vem completa da base. */
+    public Page<JobResponse> getFeed(User user, String technology, Pageable pageable) {
         Page<Job> page = jobRepository.findAll(pageable);
         if (user == null) {
-            return page.map(j -> toResponse(j, null));
+            return page.map(job -> JobMapper.toResponse(job, null));
         }
         return page.map(job -> {
             int score = matchService.calculateMatchScore(user, job);
-            return toResponse(job, score);
+            return JobMapper.toResponse(job, score);
         });
     }
 
     public Optional<JobResponse> getById(User user, UUID jobId) {
-        return jobRepository.findById(jobId)
-                .map(job -> {
-                    Integer score = user != null ? matchService.calculateMatchScore(user, job) : null;
-                    return toResponse(job, score);
-                });
+        return jobRepository.findById(jobId).map(job -> {
+            Integer score = user != null ? matchService.calculateMatchScore(user, job) : null;
+            return JobMapper.toResponse(job, score);
+        });
     }
 
     public Optional<MatchResponse> getMatchAnalysis(User user, UUID jobId) {
-        if (user == null) return Optional.empty();
-        return jobRepository.findById(jobId)
-                .map(job -> {
-                    MatchAnalysis a = matchService.getOrCreateAnalysis(user, job);
-                    return new MatchResponse(a.getMatchScore(), a.getAnalysisText(), a.getMissingSkills());
-                });
+        if (user == null) {
+            return Optional.empty();
+        }
+        return jobRepository.findById(jobId).map(job -> {
+            MatchAnalysis analysis = matchService.getOrCreateAnalysis(user, job);
+            return new MatchResponse(
+                    analysis.getMatchScore(),
+                    analysis.getAnalysisText(),
+                    analysis.getMissingSkills()
+            );
+        });
     }
 
     public Optional<Job> findJobById(UUID jobId) {
@@ -61,44 +66,31 @@ public class JobService {
     }
 
     @Transactional
-    public Job upsertJobFromCodante(CodanteJobPayload p) {
-        Job j = jobRepository.findByCodanteId(p.id()).orElseGet(() -> {
-            Job n = new Job(p.title(), p.company());
-            n.setCodanteId(p.id());
-            return n;
+    public Job upsertJobFromCodante(CodanteJobPayload payload) {
+        Job job = jobRepository.findByCodanteId(payload.id()).orElseGet(() -> {
+            Job fresh = new Job(payload.title(), payload.company());
+            fresh.setCodanteId(payload.id());
+            return fresh;
         });
-        j.setTitle(p.title());
-        j.setCompany(p.company());
-        j.setLocation(p.city() != null ? p.city() : "");
-        j.setDescription(p.description() != null ? p.description() : "");
-        j.setRequirements(p.requirements() != null ? p.requirements() : "");
-        if (p.companyWebsite() != null && !p.companyWebsite().isBlank()) {
-            j.setSourceUrl(p.companyWebsite());
+        applyCodantePayload(job, payload);
+        return jobRepository.save(job);
+    }
+
+    private static void applyCodantePayload(Job job, CodanteJobPayload payload) {
+        job.setTitle(payload.title());
+        job.setCompany(payload.company());
+        job.setLocation(payload.city() != null ? payload.city() : "");
+        job.setDescription(payload.description() != null ? payload.description() : "");
+        job.setRequirements(payload.requirements() != null ? payload.requirements() : "");
+        if (payload.companyWebsite() != null && !payload.companyWebsite().isBlank()) {
+            job.setSourceUrl(payload.companyWebsite());
         }
-        if (p.createdAt() != null && p.createdAt().length() >= 10) {
+        if (payload.createdAt() != null && payload.createdAt().length() >= 10) {
             try {
-                j.setPostedDate(LocalDate.parse(p.createdAt().substring(0, 10)));
+                job.setPostedDate(LocalDate.parse(payload.createdAt().substring(0, 10)));
             } catch (Exception ignored) {
                 // mantém postedDate
             }
         }
-        return jobRepository.save(j);
-    }
-
-    private static JobResponse toResponse(Job j, Integer matchScore) {
-        return new JobResponse(
-                j.getId(),
-                j.getTitle(),
-                j.getCompany(),
-                j.getLocation(),
-                j.getDescription(),
-                j.getRequirements(),
-                j.getBenefits(),
-                j.getTechnologies() != null ? j.getTechnologies() : List.of(),
-                j.getSourceUrl(),
-                j.getPostedDate(),
-                j.getCodanteId(),
-                matchScore
-        );
     }
 }

@@ -28,62 +28,39 @@ export class ResumesService {
 
   reloadFromApi(): void {
     this.http.get<ResumeSummaryDto[]>(API).subscribe({
-      next: (rows) => {
-        this.items.set(
-          rows.map((r) => ({
-            id: r.id,
-            fileName: r.fileName,
-            uploadedAt: r.createdAt,
-          })),
-        );
-      },
+      next: (rows) => this.items.set(rows.map(toResumeEntry)),
       error: () => this.items.set([]),
     });
   }
 
   add(file: File): Observable<AddResumeResult> {
-    const fd = new FormData();
-    fd.append('file', file);
-    return this.http.post<ResumeSummaryDto>(API, fd).pipe(
-      tap((r) => {
-        const entry: ResumeEntry = {
-          id: r.id,
-          fileName: r.fileName,
-          uploadedAt: r.createdAt,
-        };
-        this.items.update((cur) => [entry, ...cur.filter((x) => x.id !== entry.id)]);
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ResumeSummaryDto>(API, formData).pipe(
+      tap((row) => {
+        const entry = toResumeEntry(row);
+        this.items.update((current) => [entry, ...current.filter((x) => x.id !== entry.id)]);
       }),
       map(() => ({ success: true as const })),
-      catchError((err) => {
-        const msg =
-          err?.error?.message ||
-          err?.error?.error ||
-          (err?.status === 413
-            ? 'Ficheiro demasiado grande (máx. 10 MB).'
-            : `Não foi possível enviar (${err?.status ?? 'rede'}).`);
-        return of({ success: false as const, error: String(msg) });
-      }),
+      catchError((err) => of({ success: false as const, error: uploadErrorMessage(err) })),
     );
   }
 
-  /** Atualiza (substitui) o ficheiro — completa o U do CRUD. */
   replace(id: string, file: File): Observable<AddResumeResult> {
-    const fd = new FormData();
-    fd.append('file', file);
-    return this.http.put<ResumeSummaryDto>(`${API}/${id}`, fd).pipe(
-      tap((r) => {
-        const entry: ResumeEntry = {
-          id: r.id,
-          fileName: r.fileName,
-          uploadedAt: r.createdAt,
-        };
-        this.items.update((cur) => cur.map((e) => (e.id === id ? entry : e)));
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.put<ResumeSummaryDto>(`${API}/${id}`, formData).pipe(
+      tap((row) => {
+        const entry = toResumeEntry(row);
+        this.items.update((current) => current.map((e) => (e.id === id ? entry : e)));
       }),
       map(() => ({ success: true as const })),
-      catchError((err) => {
-        const msg = err?.error?.message || err?.error?.error || `Erro ao atualizar (${err?.status ?? 'rede'}).`;
-        return of({ success: false as const, error: String(msg) });
-      }),
+      catchError((err) =>
+        of({
+          success: false as const,
+          error: err?.error?.message || err?.error?.error || `Erro ao atualizar (${err?.status ?? 'rede'}).`,
+        }),
+      ),
     );
   }
 
@@ -111,8 +88,29 @@ export class ResumesService {
 
   remove(id: string): void {
     this.http.delete<void>(`${API}/${id}`).subscribe({
-      next: () => this.items.update((cur) => cur.filter((e) => e.id !== id)),
+      next: () => this.items.update((current) => current.filter((e) => e.id !== id)),
       error: () => this.reloadFromApi(),
     });
   }
+}
+
+function toResumeEntry(row: ResumeSummaryDto): ResumeEntry {
+  return {
+    id: row.id,
+    fileName: row.fileName,
+    uploadedAt: row.createdAt,
+  };
+}
+
+function uploadErrorMessage(err: {
+  error?: { message?: string; error?: string };
+  status?: number;
+}): string {
+  return (
+    err?.error?.message ||
+    err?.error?.error ||
+    (err?.status === 413
+      ? 'Ficheiro demasiado grande (máx. 10 MB).'
+      : `Não foi possível enviar (${err?.status ?? 'rede'}).`)
+  );
 }

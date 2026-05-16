@@ -3,7 +3,7 @@ package com.jobflow.backend.controller;
 import com.jobflow.backend.dto.ResumeSummaryResponse;
 import com.jobflow.backend.model.Resume;
 import com.jobflow.backend.model.User;
-import com.jobflow.backend.repository.UserRepository;
+import com.jobflow.backend.service.AuthenticatedUserService;
 import com.jobflow.backend.service.ResumeService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,55 +21,42 @@ import java.util.UUID;
 public class ResumeController {
 
     private final ResumeService resumeService;
-    private final UserRepository userRepository;
+    private final AuthenticatedUserService currentUser;
 
-    public ResumeController(ResumeService resumeService, UserRepository userRepository) {
+    public ResumeController(ResumeService resumeService, AuthenticatedUserService currentUser) {
         this.resumeService = resumeService;
-        this.userRepository = userRepository;
-    }
-
-    private User currentUser(Authentication auth) {
-        return userRepository.findByEmailIgnoreCase(auth.getName())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        this.currentUser = currentUser;
     }
 
     @GetMapping
-    public List<ResumeSummaryResponse> list(Authentication auth) {
-        return resumeService.listByUser(currentUser(auth));
+    public List<ResumeSummaryResponse> list(Authentication authentication) {
+        return resumeService.listByUser(currentUser.requireUser(authentication));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResumeSummaryResponse> upload(
-            Authentication auth,
+            Authentication authentication,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        User user = currentUser(auth);
-        ResumeSummaryResponse created = resumeService.upload(user, file);
-        return ResponseEntity.ok(created);
+        User user = currentUser.requireUser(authentication);
+        return ResponseEntity.ok(resumeService.upload(user, file));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<byte[]> download(Authentication auth, @PathVariable UUID id) {
-        User user = currentUser(auth);
+    public ResponseEntity<byte[]> download(Authentication authentication, @PathVariable UUID id) {
+        User user = currentUser.requireUser(authentication);
         return resumeService.getById(user, id)
-                .map(resume -> {
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.setContentType(MediaType.parseMediaType(resume.getContentType()));
-                    headers.setContentDispositionFormData("attachment", resume.getFileName());
-                    return ResponseEntity.ok()
-                            .headers(headers)
-                            .body(resume.getFileContent());
-                })
+                .map(this::attachmentResponse)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResumeSummaryResponse> replace(
-            Authentication auth,
+            Authentication authentication,
             @PathVariable UUID id,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        User user = currentUser(auth);
+        User user = currentUser.requireUser(authentication);
         try {
             return ResponseEntity.ok(resumeService.replace(user, id, file));
         } catch (IllegalArgumentException e) {
@@ -78,10 +65,17 @@ public class ResumeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(Authentication auth, @PathVariable UUID id) {
-        User user = currentUser(auth);
+    public ResponseEntity<Void> delete(Authentication authentication, @PathVariable UUID id) {
+        User user = currentUser.requireUser(authentication);
         return resumeService.delete(user, id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    private ResponseEntity<byte[]> attachmentResponse(Resume resume) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(resume.getContentType()));
+        headers.setContentDispositionFormData("attachment", resume.getFileName());
+        return ResponseEntity.ok().headers(headers).body(resume.getFileContent());
     }
 }

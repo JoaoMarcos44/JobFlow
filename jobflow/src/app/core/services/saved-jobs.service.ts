@@ -41,10 +41,25 @@ interface SpringPageDto {
   content: SavedJobResponseDto[];
 }
 
-function normalizeStatus(s: string): KanbanStatus {
-  if (s === 'applied' || s === 'offer') return s;
-  if (s === 'archived') return 'offer';
+function normalizeStatus(raw: string): KanbanStatus {
+  if (raw === 'applied' || raw === 'offer') return raw;
+  if (raw === 'archived') return 'offer';
   return 'saved';
+}
+
+function toSavedJobItem(row: SavedJobResponseDto): SavedJobItem {
+  return {
+    id: row.id,
+    job: {
+      id: row.job.id,
+      title: row.job.title,
+      company: row.job.company,
+      codanteId: row.job.codanteId ?? null,
+    },
+    savedAt: row.savedAt,
+    status: normalizeStatus(row.status),
+    matchScore: row.matchScore,
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -54,9 +69,9 @@ export class SavedJobsService {
 
   readonly savedCodanteIds = computed(() => {
     const ids = new Set<number>();
-    for (const i of this.items()) {
-      const c = i.job.codanteId;
-      if (c != null) ids.add(c);
+    for (const item of this.items()) {
+      const codanteId = item.job.codanteId;
+      if (codanteId != null) ids.add(codanteId);
     }
     return ids;
   });
@@ -67,18 +82,7 @@ export class SavedJobsService {
     const params = new HttpParams().set('page', '0').set('size', '100');
     this.http.get<SpringPageDto>(API_BASE, { params }).subscribe({
       next: (page) => {
-        const list = (page.content ?? []).map((row): SavedJobItem => ({
-          id: row.id,
-          job: {
-            id: row.job.id,
-            title: row.job.title,
-            company: row.job.company,
-            codanteId: row.job.codanteId ?? null,
-          },
-          savedAt: row.savedAt,
-          status: normalizeStatus(row.status),
-          matchScore: row.matchScore,
-        }));
+        const list = (page.content ?? []).map(toSavedJobItem);
         this.items.set(list);
       },
       error: () => this.items.set([]),
@@ -103,19 +107,8 @@ export class SavedJobsService {
     };
     return this.http.post<SavedJobResponseDto>(`${API_BASE}/from-codante`, body).pipe(
       tap((row) => {
-        const item: SavedJobItem = {
-          id: row.id,
-          job: {
-            id: row.job.id,
-            title: row.job.title,
-            company: row.job.company,
-            codanteId: row.job.codanteId ?? null,
-          },
-          savedAt: row.savedAt,
-          status: normalizeStatus(row.status),
-          matchScore: row.matchScore,
-        };
-        this.items.update((cur) => [...cur.filter((x) => x.id !== item.id), item]);
+        const item = toSavedJobItem(row);
+        this.items.update((current) => [...current.filter((x) => x.id !== item.id), item]);
       }),
       map(() => true),
       catchError(() => of(false)),
@@ -127,15 +120,15 @@ export class SavedJobsService {
       .put<SavedJobResponseDto>(`${API_BASE}/${savedJobId}`, { status })
       .pipe(
         tap((row) => {
-          this.items.update((cur) =>
-            cur.map((x) =>
-              x.id === savedJobId
+          this.items.update((current) =>
+            current.map((item) =>
+              item.id === savedJobId
                 ? {
-                    ...x,
+                    ...item,
                     status: normalizeStatus(row.status),
                     matchScore: row.matchScore,
                   }
-                : x,
+                : item,
             ),
           );
         }),
@@ -145,7 +138,7 @@ export class SavedJobsService {
 
   removeJob(savedJobId: string): void {
     this.http.delete<void>(`${API_BASE}/${savedJobId}`).subscribe({
-      next: () => this.items.update((cur) => cur.filter((x) => x.id !== savedJobId)),
+      next: () => this.items.update((current) => current.filter((item) => item.id !== savedJobId)),
       error: () => this.reloadFromApi(),
     });
   }

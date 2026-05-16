@@ -24,26 +24,26 @@ public class AuthService {
     }
 
     @Transactional
-    public String register(RegisterRequest req) {
-        String email = normalizeEmail(req.email());
+    public String register(RegisterRequest request) {
+        String email = normalizeEmail(request.email());
         if (email.isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
         if (users.existsByEmailIgnoreCase(email)) {
             throw new EmailAlreadyRegisteredException();
         }
-        User user = new User(email, encoder.encode(req.password()));
+        User user = new User(email, encoder.encode(request.password()));
         users.save(user);
         return jwt.issueToken(user);
     }
 
-    public String login(LoginRequest req) {
-        String email = normalizeEmail(req.email());
+    public String login(LoginRequest request) {
+        String email = normalizeEmail(request.email());
 
         User user = users.findByEmailIgnoreCase(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!encoder.matches(req.password(), user.getPasswordHash())) {
+        if (!encoder.matches(request.password(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 

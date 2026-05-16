@@ -2,7 +2,7 @@ import { Component, inject, ElementRef, afterNextRender, OnDestroy, OnInit } fro
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ResumesService } from '../../../core/services/resumes.service';
-import { createDashboardViewStagger } from '../dashboard.animations';
+import { mountDashboardView, viewRoot } from '../dashboard-view-host';
 
 @Component({
   selector: 'app-curriculos-view',
@@ -14,26 +14,7 @@ import { createDashboardViewStagger } from '../dashboard.animations';
 export class CurriculosViewComponent implements OnInit, OnDestroy {
   private readonly resumes = inject(ResumesService);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
-
-  ngOnInit(): void {
-    this.resumes.reloadFromApi();
-  }
-
-  constructor() {
-    afterNextRender(() => {
-      requestAnimationFrame(() => {
-        const root =
-          (this.host.nativeElement.querySelector('.curriculos-view') as HTMLElement) ??
-          this.host.nativeElement;
-        this.viewCtx = createDashboardViewStagger(root);
-      });
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.viewCtx?.revert();
-  }
+  private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
   selectedFile: File | null = null;
   selectedFileName = '';
@@ -43,6 +24,23 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
   private replaceForId: string | null = null;
 
   readonly resumeList = this.resumes.list;
+
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        const root = viewRoot(this.host.nativeElement, '.curriculos-view');
+        this.entranceAnimation = mountDashboardView(root);
+      });
+    });
+  }
+
+  ngOnInit(): void {
+    this.resumes.reloadFromApi();
+  }
+
+  ngOnDestroy(): void {
+    this.entranceAnimation?.revert();
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;

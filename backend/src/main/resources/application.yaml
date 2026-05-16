@@ -27,5 +27,5 @@ app:
   dev:
     seedAdmin: ${JOBFLOW_DEV_SEED_ADMIN:true}
     adminEmail: ${JOBFLOW_DEV_ADMIN_EMAIL:admin@jobflow.com}
-    adminPassword: ${JOBFLOW_DEV_ADMIN_PASSWORD:admin}
+    adminPassword: ${JOBFLOW_DEV_ADMIN_PASSWORD:admin12}
     resetAdminPassword: ${JOBFLOW_DEV_RESET_ADMIN_PASSWORD:true}

@@ -4,7 +4,7 @@ import com.jobflow.backend.dto.SaveSavedJobFromCodanteRequest;
 import com.jobflow.backend.dto.SavedJobRequest;
 import com.jobflow.backend.dto.SavedJobResponse;
 import com.jobflow.backend.model.User;
-import com.jobflow.backend.repository.UserRepository;
+import com.jobflow.backend.service.AuthenticatedUserService;
 import com.jobflow.backend.service.SavedJobService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -21,32 +21,30 @@ import java.util.UUID;
 public class SavedJobController {
 
     private final SavedJobService savedJobService;
-    private final UserRepository userRepository;
+    private final AuthenticatedUserService currentUser;
 
-    public SavedJobController(SavedJobService savedJobService, UserRepository userRepository) {
+    public SavedJobController(SavedJobService savedJobService, AuthenticatedUserService currentUser) {
         this.savedJobService = savedJobService;
-        this.userRepository = userRepository;
-    }
-
-    private User currentUser(Authentication auth) {
-        return userRepository.findByEmailIgnoreCase(auth.getName())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        this.currentUser = currentUser;
     }
 
     @GetMapping
     public Page<SavedJobResponse> list(
-            Authentication auth,
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        User user = currentUser(auth);
+        User user = currentUser.requireUser(authentication);
         Pageable pageable = PageRequest.of(page, size);
         return savedJobService.listByUser(user, pageable);
     }
 
     @PostMapping
-    public ResponseEntity<SavedJobResponse> save(@Valid @RequestBody SavedJobRequest request, Authentication auth) {
-        User user = currentUser(auth);
+    public ResponseEntity<SavedJobResponse> save(
+            @Valid @RequestBody SavedJobRequest request,
+            Authentication authentication
+    ) {
+        User user = currentUser.requireUser(authentication);
         try {
             return ResponseEntity.ok(savedJobService.save(user, request));
         } catch (IllegalArgumentException e) {
@@ -54,26 +52,22 @@ public class SavedJobController {
         }
     }
 
-    /**
-     * Importa/atualiza {@link com.jobflow.backend.model.Job} a partir do feed Codante e cria {@code saved_jobs}
-     * (relação utilizador ↔ vaga).
-     */
     @PostMapping("/from-codante")
     public ResponseEntity<SavedJobResponse> saveFromCodante(
-            @Valid @RequestBody SaveSavedJobFromCodanteRequest body,
-            Authentication auth
+            @Valid @RequestBody SaveSavedJobFromCodanteRequest request,
+            Authentication authentication
     ) {
-        User user = currentUser(auth);
+        User user = currentUser.requireUser(authentication);
         try {
-            return ResponseEntity.ok(savedJobService.saveFromCodante(user, body));
+            return ResponseEntity.ok(savedJobService.saveFromCodante(user, request));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SavedJobResponse> getById(Authentication auth, @PathVariable UUID id) {
-        User user = currentUser(auth);
+    public ResponseEntity<SavedJobResponse> getById(Authentication authentication, @PathVariable UUID id) {
+        User user = currentUser.requireUser(authentication);
         return savedJobService.getById(user, id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -81,11 +75,11 @@ public class SavedJobController {
 
     @PutMapping("/{id}")
     public ResponseEntity<SavedJobResponse> update(
-            Authentication auth,
+            Authentication authentication,
             @PathVariable UUID id,
             @RequestBody(required = false) UpdateSavedJobBody body
     ) {
-        User user = currentUser(auth);
+        User user = currentUser.requireUser(authentication);
         String notes = body != null ? body.notes() : null;
         String status = body != null ? body.status() : null;
         return savedJobService.update(user, id, notes, status)
@@ -94,8 +88,8 @@ public class SavedJobController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(Authentication auth, @PathVariable UUID id) {
-        User user = currentUser(auth);
+    public ResponseEntity<Void> delete(Authentication authentication, @PathVariable UUID id) {
+        User user = currentUser.requireUser(authentication);
         return savedJobService.delete(user, id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 

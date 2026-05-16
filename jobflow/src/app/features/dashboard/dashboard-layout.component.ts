@@ -22,7 +22,7 @@ import { createDashboardShellEntrance } from './dashboard.animations';
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
-  private readonly savedJobsApi = inject(SavedJobsService);
+  private readonly savedJobs = inject(SavedJobsService);
   private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
   private readonly host = inject(ElementRef<HTMLElement>);
@@ -46,7 +46,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadProfile();
-    this.savedJobsApi.reloadFromApi();
+    this.savedJobs.reloadFromApi();
   }
 
   ngOnDestroy(): void {

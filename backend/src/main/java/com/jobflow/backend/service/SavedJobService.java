@@ -4,6 +4,7 @@ import com.jobflow.backend.dto.JobResponse;
 import com.jobflow.backend.dto.SaveSavedJobFromCodanteRequest;
 import com.jobflow.backend.dto.SavedJobRequest;
 import com.jobflow.backend.dto.SavedJobResponse;
+import com.jobflow.backend.mapper.JobMapper;
 import com.jobflow.backend.model.Job;
 import com.jobflow.backend.model.SavedJob;
 import com.jobflow.backend.model.User;
@@ -20,25 +21,25 @@ import java.util.UUID;
 @Service
 public class SavedJobService {
 
-    private final SavedJobRepository savedJobRepository;
+    private final SavedJobRepository savedJobs;
     private final JobService jobService;
     private final MatchService matchService;
 
-    public SavedJobService(SavedJobRepository savedJobRepository, JobService jobService, MatchService matchService) {
-        this.savedJobRepository = savedJobRepository;
+    public SavedJobService(SavedJobRepository savedJobs, JobService jobService, MatchService matchService) {
+        this.savedJobs = savedJobs;
         this.jobService = jobService;
         this.matchService = matchService;
     }
 
     @Transactional(readOnly = true)
     public Page<SavedJobResponse> listByUser(User user, Pageable pageable) {
-        return savedJobRepository.findByUserIdOrderBySavedAtDesc(user.getId(), pageable)
-                .map(this::toResponse);
+        return savedJobs.findByUserIdOrderBySavedAtDesc(user.getId(), pageable)
+                .map(this::toSavedJobResponse);
     }
 
     public Optional<SavedJobResponse> getById(User user, UUID savedJobId) {
-        return savedJobRepository.findByUserIdAndIdWithJob(user.getId(), savedJobId)
-                .map(this::toResponse);
+        return savedJobs.findByUserIdAndIdWithJob(user.getId(), savedJobId)
+                .map(this::toSavedJobResponse);
     }
 
     public SavedJobResponse saveFromCodante(User user, SaveSavedJobFromCodanteRequest body) {
@@ -49,48 +50,54 @@ public class SavedJobService {
     public SavedJobResponse save(User user, SavedJobRequest request) {
         Job job = jobService.findJobById(request.jobId())
                 .orElseThrow(() -> new IllegalArgumentException("Job not found"));
-        if (savedJobRepository.existsByUserIdAndJobId(user.getId(), job.getId())) {
+        if (savedJobs.existsByUserIdAndJobId(user.getId(), job.getId())) {
             throw new IllegalArgumentException("Job already saved");
         }
-        int score = matchService.calculateMatchScore(user, job);
         SavedJob saved = new SavedJob(user, job);
-        saved.setMatchScore(score);
+        saved.setMatchScore(matchService.calculateMatchScore(user, job));
         saved.setNotes(request.notes());
         if (request.status() != null && !request.status().isBlank()) {
             saved.setStatus(request.status().trim());
         }
-        savedJobRepository.save(saved);
-        return toResponse(saved);
+        savedJobs.save(saved);
+        return toSavedJobResponse(saved);
     }
 
     public Optional<SavedJobResponse> update(User user, UUID savedJobId, String notes, String status) {
-        // Fetch join Job to avoid LazyInitializationException when mapping response (open-in-view is false).
-        return savedJobRepository.findByUserIdAndIdWithJob(user.getId(), savedJobId)
-                .map(s -> {
-                    if (notes != null) s.setNotes(notes);
-                    if (status != null && !status.isBlank()) s.setStatus(status.trim());
-                    s.setUpdatedAt(Instant.now());
-                    savedJobRepository.save(s);
-                    return toResponse(s);
+        return savedJobs.findByUserIdAndIdWithJob(user.getId(), savedJobId)
+                .map(saved -> {
+                    if (notes != null) {
+                        saved.setNotes(notes);
+                    }
+                    if (status != null && !status.isBlank()) {
+                        saved.setStatus(status.trim());
+                    }
+                    saved.setUpdatedAt(Instant.now());
+                    savedJobs.save(saved);
+                    return toSavedJobResponse(saved);
                 });
     }
 
     public boolean delete(User user, UUID savedJobId) {
-        return savedJobRepository.findByUserIdAndId(user.getId(), savedJobId)
-                .map(s -> {
-                    savedJobRepository.delete(s);
+        return savedJobs.findByUserIdAndId(user.getId(), savedJobId)
+                .map(saved -> {
+                    savedJobs.delete(saved);
                     return true;
-                }).orElse(false);
+                })
+                .orElse(false);
     }
 
-    private SavedJobResponse toResponse(SavedJob s) {
-        Job j = s.getJob();
-        JobResponse jobResp = new JobResponse(
-                j.getId(), j.getTitle(), j.getCompany(), j.getLocation(),
-                j.getDescription(), j.getRequirements(), j.getBenefits(),
-                j.getTechnologies() != null ? j.getTechnologies() : java.util.List.of(),
-                j.getSourceUrl(), j.getPostedDate(), j.getCodanteId(), s.getMatchScore()
+    private SavedJobResponse toSavedJobResponse(SavedJob saved) {
+        Job job = saved.getJob();
+        JobResponse jobResponse = JobMapper.toResponse(job, saved.getMatchScore());
+        return new SavedJobResponse(
+                saved.getId(),
+                jobResponse,
+                saved.getNotes(),
+                saved.getMatchScore(),
+                saved.getStatus(),
+                saved.getSavedAt(),
+                saved.getUpdatedAt()
         );
-        return new SavedJobResponse(s.getId(), jobResp, s.getNotes(), s.getMatchScore(), s.getStatus(), s.getSavedAt(), s.getUpdatedAt());
     }
 }

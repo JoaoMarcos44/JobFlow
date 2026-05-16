@@ -14,24 +14,22 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final UserSkillRepository userSkillRepository;
+    private final UserRepository users;
+    private final UserSkillRepository userSkills;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserSkillRepository userSkillRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.userSkillRepository = userSkillRepository;
+    public UserService(UserRepository users, UserSkillRepository userSkills, PasswordEncoder passwordEncoder) {
+        this.users = users;
+        this.userSkills = userSkills;
         this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<ProfileResponse> getProfileByEmail(String email) {
-        return userRepository.findByEmailIgnoreCase(email)
-                .map(this::toProfileResponse);
+        return users.findByEmailIgnoreCase(email).map(this::toProfileResponse);
     }
 
     public Optional<ProfileResponse> updateProfile(String email, ProfileUpdateRequest request) {
@@ -39,61 +37,66 @@ public class UserService {
     }
 
     public void changePassword(String email, ChangePasswordRequest request) {
-        User user = userRepository.findByEmailIgnoreCase(email)
+        User user = users.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
+        users.save(user);
     }
 
     public void changeEmail(String email, ChangeEmailRequest request) {
-        User user = userRepository.findByEmailIgnoreCase(email)
+        User user = users.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Password is incorrect");
         }
         String newEmail = request.newEmail().trim().toLowerCase();
-        if (userRepository.existsByEmailIgnoreCase(newEmail)) {
+        if (users.existsByEmailIgnoreCase(newEmail)) {
             throw new IllegalArgumentException("Email already in use");
         }
         user.setEmail(newEmail);
-        userRepository.save(user);
+        users.save(user);
     }
 
     public List<String> getSkills(UUID userId) {
-        return userSkillRepository.findByUserIdOrderBySkillNameAsc(userId)
-                .stream()
-                .map(UserSkill::getSkillName)
-                .collect(Collectors.toList());
+        return skillNamesFor(userId);
     }
 
     public void addSkill(User user, String skillName) {
         String normalized = skillName.trim();
-        if (normalized.isEmpty()) throw new IllegalArgumentException("Skill name required");
-        if (userSkillRepository.existsByUserIdAndSkillNameIgnoreCase(user.getId(), normalized)) {
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("Skill name required");
+        }
+        if (userSkills.existsByUserIdAndSkillNameIgnoreCase(user.getId(), normalized)) {
             throw new IllegalArgumentException("Skill already added");
         }
-        userSkillRepository.save(new UserSkill(user, normalized));
+        userSkills.save(new UserSkill(user, normalized));
     }
 
     public boolean removeSkill(User user, String skillName) {
-        if (skillName == null || skillName.isBlank()) return false;
-        userSkillRepository.deleteByUserIdAndSkillNameIgnoreCase(user.getId(), skillName.trim());
+        if (skillName == null || skillName.isBlank()) {
+            return false;
+        }
+        userSkills.deleteByUserIdAndSkillNameIgnoreCase(user.getId(), skillName.trim());
         return true;
     }
 
     private ProfileResponse toProfileResponse(User user) {
-        List<String> skills = userSkillRepository.findByUserIdOrderBySkillNameAsc(user.getId())
-                .stream().map(UserSkill::getSkillName).collect(Collectors.toList());
         return new ProfileResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getEmail(),
                 null,
                 null,
-                skills
+                skillNamesFor(user.getId())
         );
+    }
+
+    private List<String> skillNamesFor(UUID userId) {
+        return userSkills.findByUserIdOrderBySkillNameAsc(userId).stream()
+                .map(UserSkill::getSkillName)
+                .toList();
     }
 }

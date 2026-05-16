@@ -26,7 +26,7 @@ public class DevUserDataLoader implements ApplicationRunner {
     @Value("${app.dev.adminEmail:admin@jobflow.com}")
     private String adminEmail;
 
-    @Value("${app.dev.adminPassword:admin}")
+    @Value("${app.dev.adminPassword:admin12}")
     private String adminPassword;
 
     @Value("${app.dev.resetAdminPassword:false}")

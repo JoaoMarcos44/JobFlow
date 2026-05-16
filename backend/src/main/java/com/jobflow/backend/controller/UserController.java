@@ -1,10 +1,12 @@
 package com.jobflow.backend.controller;
 
+import com.jobflow.backend.dto.AddSkillRequest;
 import com.jobflow.backend.dto.ChangeEmailRequest;
 import com.jobflow.backend.dto.ChangePasswordRequest;
 import com.jobflow.backend.dto.ProfileResponse;
 import com.jobflow.backend.dto.ProfileUpdateRequest;
-import com.jobflow.backend.repository.UserRepository;
+import com.jobflow.backend.model.User;
+import com.jobflow.backend.service.AuthenticatedUserService;
 import com.jobflow.backend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,41 +21,44 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
+    private final AuthenticatedUserService currentUser;
 
-    public UserController(UserService userService, UserRepository userRepository) {
+    public UserController(UserService userService, AuthenticatedUserService currentUser) {
         this.userService = userService;
-        this.userRepository = userRepository;
+        this.currentUser = currentUser;
     }
 
     @GetMapping("/me")
-    public Map<String, Object> me(Authentication auth) {
-        return Map.of("email", auth.getName());
+    public Map<String, Object> me(Authentication authentication) {
+        return Map.of("email", authentication.getName());
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ProfileResponse> profile(Authentication auth) {
-        return userService.getProfileByEmail(auth.getName())
+    public ResponseEntity<ProfileResponse> profile(Authentication authentication) {
+        return userService.getProfileByEmail(authentication.getName())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<ProfileResponse> updateProfile(@Valid @RequestBody ProfileUpdateRequest request, Authentication auth) {
-        return userService.updateProfile(auth.getName(), request)
+    public ResponseEntity<ProfileResponse> updateProfile(
+            @Valid @RequestBody ProfileUpdateRequest request,
+            Authentication authentication
+    ) {
+        return userService.updateProfile(authentication.getName(), request)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/skills")
-    public List<String> skills(Authentication auth) {
-        var user = userRepository.findByEmailIgnoreCase(auth.getName()).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public List<String> skills(Authentication authentication) {
+        User user = currentUser.requireUser(authentication);
         return userService.getSkills(user.getId());
     }
 
     @PostMapping("/skills")
-    public ResponseEntity<Void> addSkill(@Valid @RequestBody com.jobflow.backend.dto.AddSkillRequest request, Authentication auth) {
-        var user = userRepository.findByEmailIgnoreCase(auth.getName()).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public ResponseEntity<Void> addSkill(@Valid @RequestBody AddSkillRequest request, Authentication authentication) {
+        User user = currentUser.requireUser(authentication);
         try {
             userService.addSkill(user, request.skillName());
             return ResponseEntity.ok().build();
@@ -63,15 +68,15 @@ public class UserController {
     }
 
     @DeleteMapping("/skills/{skill}")
-    public ResponseEntity<Void> removeSkill(Authentication auth, @PathVariable String skill) {
-        var user = userRepository.findByEmailIgnoreCase(auth.getName()).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public ResponseEntity<Void> removeSkill(Authentication authentication, @PathVariable String skill) {
+        User user = currentUser.requireUser(authentication);
         return userService.removeSkill(user, skill) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/password")
-    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, Authentication auth) {
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, Authentication authentication) {
         try {
-            userService.changePassword(auth.getName(), request);
+            userService.changePassword(authentication.getName(), request);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -79,9 +84,9 @@ public class UserController {
     }
 
     @PutMapping("/email")
-    public ResponseEntity<Void> changeEmail(@Valid @RequestBody ChangeEmailRequest request, Authentication auth) {
+    public ResponseEntity<Void> changeEmail(@Valid @RequestBody ChangeEmailRequest request, Authentication authentication) {
         try {
-            userService.changeEmail(auth.getName(), request);
+            userService.changeEmail(authentication.getName(), request);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();

@@ -13,13 +13,15 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { JobBoardService, CodanteJob, JobListResponse } from '../../../core/services/job-board.service';
 import { SavedJobsService } from '../../../core/services/saved-jobs.service';
-import { animateElementsFrom, createDashboardViewStagger } from '../dashboard.animations';
+import { mountDashboardView, viewRoot } from '../dashboard-view-host';
+import { animateElementsFrom } from '../dashboard.animations';
 import {
   type ScheduleCategory,
   type WorkModeFilter,
   FEED_SKILL_OPTIONS,
   filterJobs,
 } from './feed-filters';
+import { companyInitial, scheduleLabel, shortenText, tagsFromJob } from './feed-job-display';
 
 @Component({
   selector: 'app-feed-view',
@@ -33,23 +35,7 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly savedJobs = inject(SavedJobsService);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
-
-  private get feedRoot(): HTMLElement {
-    return (this.host.nativeElement.querySelector('.feed') as HTMLElement) ?? this.host.nativeElement;
-  }
-
-  constructor() {
-    afterNextRender(() => {
-      requestAnimationFrame(() => {
-        this.viewCtx = createDashboardViewStagger(this.feedRoot);
-      });
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.viewCtx?.revert();
-  }
+  private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
   readonly loading = signal(true);
   readonly error = signal(false);
@@ -58,18 +44,13 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   readonly currentPage = signal(1);
   readonly scheduleCategory = signal<ScheduleCategory>('all');
   readonly workModeFilter = signal<WorkModeFilter>('all');
-  /** IDs de FEED_SKILL_OPTIONS — a vaga tem de mencionar todas (requisitos/descrição/título). */
   readonly selectedSkillIds = signal<string[]>([]);
-
-  /** Painel de chips de habilidades (por defeito só Vínculo + Modo). */
   readonly skillsPanelOpen = signal(false);
+  readonly saveFeedbackVisible = signal(false);
 
   readonly skillFilterOptions = FEED_SKILL_OPTIONS;
-
   readonly jobs = computed(() => this.response()?.data ?? []);
   readonly meta = computed(() => this.response()?.meta ?? null);
-
-  /** Filtros aplicados à lista da página atual (a API só expõe search/page). */
   readonly filteredJobs = computed(() =>
     filterJobs(
       this.jobs(),
@@ -78,7 +59,6 @@ export class FeedViewComponent implements OnInit, OnDestroy {
       this.selectedSkillIds(),
     ),
   );
-
   readonly hasActiveFilters = computed(
     () =>
       this.scheduleCategory() !== 'all' ||
@@ -86,8 +66,20 @@ export class FeedViewComponent implements OnInit, OnDestroy {
       this.selectedSkillIds().length > 0,
   );
 
+  constructor() {
+    afterNextRender(() => {
+      requestAnimationFrame(() => {
+        this.entranceAnimation = mountDashboardView(viewRoot(this.host.nativeElement, '.feed'));
+      });
+    });
+  }
+
   ngOnInit(): void {
     this.loadJobs();
+  }
+
+  ngOnDestroy(): void {
+    this.entranceAnimation?.revert();
   }
 
   loadJobs(): void {
@@ -123,11 +115,11 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   }
 
   toggleSkillFilter(skillId: string): void {
-    const cur = this.selectedSkillIds();
-    if (cur.includes(skillId)) {
-      this.selectedSkillIds.set(cur.filter((id) => id !== skillId));
+    const current = this.selectedSkillIds();
+    if (current.includes(skillId)) {
+      this.selectedSkillIds.set(current.filter((id) => id !== skillId));
     } else {
-      this.selectedSkillIds.set([...cur, skillId]);
+      this.selectedSkillIds.set([...current, skillId]);
     }
     queueMicrotask(() => this.animateJobCards());
   }
@@ -137,7 +129,7 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   }
 
   toggleSkillsPanel(): void {
-    this.skillsPanelOpen.update((v) => !v);
+    this.skillsPanelOpen.update((open) => !open);
   }
 
   clearFilters(): void {
@@ -145,16 +137,6 @@ export class FeedViewComponent implements OnInit, OnDestroy {
     this.workModeFilter.set('all');
     this.selectedSkillIds.set([]);
     queueMicrotask(() => this.animateJobCards());
-  }
-
-  private animateJobCards(): void {
-    animateElementsFrom(this.feedRoot, '.cards .card', {
-      y: 20,
-      opacity: 0,
-      duration: 0.36,
-      stagger: 0.05,
-      ease: 'power3.out',
-    });
   }
 
   goToPage(page: number): void {
@@ -168,30 +150,11 @@ export class FeedViewComponent implements OnInit, OnDestroy {
     this.router.navigate(['dashboard', 'candidaturas'], { state: { job } });
   }
 
-  companyInitial(company: string): string {
-    return (company?.trim().charAt(0) || '?').toUpperCase();
-  }
-
-  /** Extrai até 4 "tags" a partir de requirements/description (ex.: tecnologias). */
-  tagsFromJob(job: CodanteJob): string[] {
-    const text = (job.requirements || job.description || '').replace(/\n/g, ' ');
-    const words = text.split(/[\s,;()-]+/).filter((w) => w.length > 2 && /^[A-Za-z#]+$/.test(w));
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const w of words) {
-      const key = w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-      if (seen.has(key) || out.length >= 4) break;
-      seen.add(key);
-      out.push(key);
-    }
-    return out.slice(0, 4);
-  }
-
   saveJob(event: Event, job: CodanteJob): void {
     event.stopPropagation();
     event.preventDefault();
     this.savedJobs.addJob(job).subscribe((ok) => {
-      if (ok) this.showSaveFeedback();
+      if (ok) this.flashSaveFeedback();
     });
   }
 
@@ -199,27 +162,23 @@ export class FeedViewComponent implements OnInit, OnDestroy {
     return this.savedJobs.isSaved(job.id);
   }
 
-  private saveFeedbackVisible = signal(false);
-  readonly showSaveFeedback = (): void => {
+  readonly companyInitial = companyInitial;
+  readonly tagsFromJob = tagsFromJob;
+  readonly summary = shortenText;
+  readonly scheduleLabel = scheduleLabel;
+
+  private flashSaveFeedback(): void {
     this.saveFeedbackVisible.set(true);
     setTimeout(() => this.saveFeedbackVisible.set(false), 2500);
-  };
-  readonly saveFeedbackVisibleReadonly = this.saveFeedbackVisible.asReadonly();
-
-  summary(description: string, maxLen: number = 120): string {
-    if (!description) return '';
-    const text = description.trim();
-    if (text.length <= maxLen) return text;
-    return text.slice(0, maxLen).trim() + '…';
   }
 
-  scheduleLabel(schedule: string): string {
-    const map: Record<string, string> = {
-      'full-time': 'Tempo integral',
-      'part-time': 'Meio período',
-      contract: 'Contrato',
-      internship: 'Estágio',
-    };
-    return map[schedule] ?? schedule;
+  private animateJobCards(): void {
+    animateElementsFrom(viewRoot(this.host.nativeElement, '.feed'), '.cards .card', {
+      y: 20,
+      opacity: 0,
+      duration: 0.36,
+      stagger: 0.05,
+      ease: 'power3.out',
+    });
   }
 }

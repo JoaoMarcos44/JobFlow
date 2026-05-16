@@ -10,7 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SavedJobsService, KanbanStatus, type SavedJobItem } from '../../../core/services/saved-jobs.service';
-import { animateElementsFrom, createDashboardViewStagger } from '../dashboard.animations';
+import { mountDashboardView, viewRoot } from '../dashboard-view-host';
 
 export interface KanbanCard {
   id: string;
@@ -31,54 +31,34 @@ export class CandidaturasViewComponent implements OnDestroy {
   private readonly router = inject(Router);
   private readonly savedJobs = inject(SavedJobsService);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private viewCtx?: ReturnType<typeof createDashboardViewStagger>;
+  private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
-  private get viewRoot(): HTMLElement {
-    return (
-      (this.host.nativeElement.querySelector('.candidaturas-view') as HTMLElement) ??
-      this.host.nativeElement
-    );
-  }
+  readonly dragOverStatus = signal<KanbanStatus | null>(null);
+
+  readonly saved = computed<KanbanCard[]>(() =>
+    this.savedJobs.savedJobs().filter((i) => i.status === 'saved').map(toKanbanCard),
+  );
+  readonly applied = computed<KanbanCard[]>(() =>
+    this.savedJobs.savedJobs().filter((i) => i.status === 'applied').map(toKanbanCard),
+  );
+  readonly offer = computed<KanbanCard[]>(() =>
+    this.savedJobs.savedJobs().filter((i) => i.status === 'offer').map(toKanbanCard),
+  );
 
   constructor() {
     afterNextRender(() => {
       requestAnimationFrame(() => {
-        this.viewCtx = createDashboardViewStagger(this.viewRoot);
-        queueMicrotask(() =>
-          animateElementsFrom(this.viewRoot, '.kanban-column', {
-            y: 24,
-            opacity: 0,
-            duration: 0.45,
-            stagger: 0.09,
-            ease: 'power3.out',
-          }),
-        );
+        const root = viewRoot(this.host.nativeElement, '.candidaturas-view');
+        this.entranceAnimation = mountDashboardView(root, {
+          selector: '.kanban-column',
+          vars: { y: 24, opacity: 0, duration: 0.45, stagger: 0.09, ease: 'power3.out' },
+        });
       });
     });
   }
 
   ngOnDestroy(): void {
-    this.viewCtx?.revert();
-  }
-
-  readonly saved = computed<KanbanCard[]>(() =>
-    this.savedJobs.savedJobs().filter((i) => i.status === 'saved').map(this.toCard)
-  );
-  readonly applied = computed<KanbanCard[]>(() =>
-    this.savedJobs.savedJobs().filter((i) => i.status === 'applied').map(this.toCard)
-  );
-  readonly offer = computed<KanbanCard[]>(() =>
-    this.savedJobs.savedJobs().filter((i) => i.status === 'offer').map(this.toCard)
-  );
-
-  private toCard(item: SavedJobItem): KanbanCard {
-    return {
-      id: item.id,
-      title: item.job.title,
-      company: item.job.company,
-      status: item.status,
-      matchScore: item.matchScore ?? undefined,
-    };
+    this.entranceAnimation?.revert();
   }
 
   onDragStart(event: DragEvent, card: KanbanCard): void {
@@ -86,8 +66,6 @@ export class CandidaturasViewComponent implements OnDestroy {
     event.dataTransfer.setData('application/json', JSON.stringify({ id: card.id, status: card.status }));
     event.dataTransfer.effectAllowed = 'move';
   }
-
-  dragOverStatus = signal<KanbanStatus | null>(null);
 
   onDragOver(event: DragEvent, newStatus: KanbanStatus): void {
     event.preventDefault();
@@ -121,4 +99,14 @@ export class CandidaturasViewComponent implements OnDestroy {
   goToFeed(): void {
     this.router.navigate(['dashboard', 'feed']);
   }
+}
+
+function toKanbanCard(item: SavedJobItem): KanbanCard {
+  return {
+    id: item.id,
+    title: item.job.title,
+    company: item.job.company,
+    status: item.status,
+    matchScore: item.matchScore ?? undefined,
+  };
 }

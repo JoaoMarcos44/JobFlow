@@ -6,8 +6,11 @@ import { FeedViewComponent } from './feed.view';
 import { JobBoardService, CodanteJob, JobListResponse } from '../../../core/services/job-board.service';
 import { SavedJobsService } from '../../../core/services/saved-jobs.service';
 
+vi.mock('../dashboard-view-host', () => ({
+  viewRoot: (host: HTMLElement) => host,
+  mountDashboardView: () => ({ revert: vi.fn() }),
+}));
 vi.mock('../dashboard.animations', () => ({
-  createDashboardViewStagger: () => ({ revert: vi.fn() }),
   animateElementsFrom: vi.fn(),
 }));
 

@@ -9,68 +9,84 @@ import com.jobflow.backend.repository.UserSkillRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class MatchService {
 
-    private final UserSkillRepository userSkillRepository;
-    private final MatchAnalysisRepository matchAnalysisRepository;
+    private final UserSkillRepository userSkills;
+    private final MatchAnalysisRepository analyses;
 
-    public MatchService(UserSkillRepository userSkillRepository, MatchAnalysisRepository matchAnalysisRepository) {
-        this.userSkillRepository = userSkillRepository;
-        this.matchAnalysisRepository = matchAnalysisRepository;
+    public MatchService(UserSkillRepository userSkills, MatchAnalysisRepository analyses) {
+        this.userSkills = userSkills;
+        this.analyses = analyses;
     }
 
     public int calculateMatchScore(User user, Job job) {
-        List<String> userSkills = userSkillRepository.findByUserIdOrderBySkillNameAsc(user.getId())
-                .stream()
-                .map(UserSkill::getSkillName)
-                .collect(Collectors.toList());
-        return calculateMatchScore(userSkills, job.getTechnologies());
+        return calculateMatchScore(skillNamesFor(user.getId()), job.getTechnologies());
     }
 
     public static int calculateMatchScore(List<String> userSkills, List<String> jobTechnologies) {
-        if (jobTechnologies == null || jobTechnologies.isEmpty()) return 0;
-        var userSet = userSkills.stream().map(String::toLowerCase).collect(Collectors.toSet());
-        var jobSet = jobTechnologies.stream().map(String::toLowerCase).collect(Collectors.toSet());
-        long matched = jobSet.stream().filter(userSet::contains).count();
-        return (int) Math.round((matched * 100.0) / jobSet.size());
+        if (jobTechnologies == null || jobTechnologies.isEmpty()) {
+            return 0;
+        }
+        Set<String> normalizedUserSkills = userSkills.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+        Set<String> normalizedJobTechs = jobTechnologies.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+        long matched = normalizedJobTechs.stream().filter(normalizedUserSkills::contains).count();
+        return (int) Math.round((matched * 100.0) / normalizedJobTechs.size());
     }
 
     public String generateMatchFeedback(List<String> userSkills, List<String> jobTechnologies, int matchScore) {
-        var userSet = userSkills.stream().map(String::toLowerCase).collect(Collectors.toSet());
-        List<String> missing = jobTechnologies == null ? List.of() : jobTechnologies.stream()
-                .filter(t -> !userSet.contains(t.toLowerCase()))
-                .collect(Collectors.toList());
-
+        List<String> missing = skillsMissingFromJob(userSkills, jobTechnologies);
         if (matchScore >= 70) {
             return "Ótimo match! Você possui " + matchScore + "% das tecnologias exigidas.";
-        } else if (matchScore >= 40) {
-            return "Match intermediário (" + matchScore + "%). Faltam: " + String.join(", ", missing) + ". Adicionar essas skills pode aumentar seu match.";
-        } else {
-            return "Match baixo (" + matchScore + "%). A vaga exige: " + String.join(", ", missing) + ". Considere estudar essas tecnologias.";
         }
+        if (matchScore >= 40) {
+            return "Match intermediário (" + matchScore + "%). Faltam: " + String.join(", ", missing)
+                    + ". Adicionar essas skills pode aumentar seu match.";
+        }
+        return "Match baixo (" + matchScore + "%). A vaga exige: " + String.join(", ", missing)
+                + ". Considere estudar essas tecnologias.";
     }
 
     public MatchAnalysis getOrCreateAnalysis(User user, Job job) {
-        return matchAnalysisRepository.findFirstByUserIdAndJobIdOrderByCreatedAtDesc(user.getId(), job.getId())
+        return analyses.findFirstByUserIdAndJobIdOrderByCreatedAtDesc(user.getId(), job.getId())
                 .orElseGet(() -> createAndSaveAnalysis(user, job));
     }
 
     private MatchAnalysis createAndSaveAnalysis(User user, Job job) {
-        int score = calculateMatchScore(user, job);
-        List<String> userSkills = userSkillRepository.findByUserIdOrderBySkillNameAsc(user.getId())
-                .stream().map(UserSkill::getSkillName).collect(Collectors.toList());
-        String analysisText = generateMatchFeedback(userSkills, job.getTechnologies(), score);
-        var userSet = userSkills.stream().map(String::toLowerCase).collect(Collectors.toSet());
-        List<String> missing = job.getTechnologies() == null ? List.of() : job.getTechnologies().stream()
-                .filter(t -> !userSet.contains(t.toLowerCase()))
-                .collect(Collectors.toList());
+        List<String> skills = skillNamesFor(user.getId());
+        int score = calculateMatchScore(skills, job.getTechnologies());
+        String feedback = generateMatchFeedback(skills, job.getTechnologies(), score);
+        List<String> missing = skillsMissingFromJob(skills, job.getTechnologies());
 
-        MatchAnalysis a = new MatchAnalysis(user, job, score);
-        a.setAnalysisText(analysisText);
-        a.setMissingSkills(missing);
-        return matchAnalysisRepository.save(a);
+        MatchAnalysis analysis = new MatchAnalysis(user, job, score);
+        analysis.setAnalysisText(feedback);
+        analysis.setMissingSkills(missing);
+        return analyses.save(analysis);
+    }
+
+    private List<String> skillNamesFor(UUID userId) {
+        return userSkills.findByUserIdOrderBySkillNameAsc(userId).stream()
+                .map(UserSkill::getSkillName)
+                .toList();
+    }
+
+    private static List<String> skillsMissingFromJob(List<String> userSkills, List<String> jobTechnologies) {
+        if (jobTechnologies == null) {
+            return List.of();
+        }
+        Set<String> normalizedUserSkills = userSkills.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+        return jobTechnologies.stream()
+                .filter(tech -> !normalizedUserSkills.contains(tech.toLowerCase()))
+                .toList();
     }
 }
