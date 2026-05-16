@@ -10,15 +10,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Seed dev admin user for local demos.
- * Disabled in tests via profile.
+ * Cria ou repõe utilizador de demonstração em desenvolvimento local.
  */
 @Component
 @Profile("!test")
 public class DevUserDataLoader implements ApplicationRunner {
 
-    private final UserRepository users;
-    private final PasswordEncoder encoder;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${app.dev.seedAdmin:true}")
     private boolean seedAdmin;
@@ -32,23 +31,33 @@ public class DevUserDataLoader implements ApplicationRunner {
     @Value("${app.dev.resetAdminPassword:false}")
     private boolean resetAdminPassword;
 
-    public DevUserDataLoader(UserRepository users, PasswordEncoder encoder) {
-        this.users = users;
-        this.encoder = encoder;
+    public DevUserDataLoader(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!seedAdmin) return;
+        if (!seedAdmin) {
+            return;
+        }
         String email = adminEmail == null ? "" : adminEmail.trim().toLowerCase();
-        if (email.isBlank()) return;
-        String pw = adminPassword == null ? "" : adminPassword;
-        if (pw.isBlank()) return;
-        users.findByEmailIgnoreCase(email).ifPresentOrElse(existing -> {
-            if (!resetAdminPassword) return;
-            existing.setPasswordHash(encoder.encode(pw));
-            users.save(existing);
-        }, () -> users.save(new User(email, encoder.encode(pw))));
+        if (email.isBlank()) {
+            return;
+        }
+        String plainPassword = adminPassword == null ? "" : adminPassword;
+        if (plainPassword.isBlank()) {
+            return;
+        }
+        String encodedPassword = passwordEncoder.encode(plainPassword);
+        userRepository.findByEmailIgnoreCase(email).ifPresentOrElse(
+                existing -> {
+                    if (resetAdminPassword) {
+                        existing.setPasswordHash(encodedPassword);
+                        userRepository.save(existing);
+                    }
+                },
+                () -> userRepository.save(new User(email, encodedPassword))
+        );
     }
 }
-

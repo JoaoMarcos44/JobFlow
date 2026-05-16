@@ -18,18 +18,22 @@ import java.util.UUID;
 @Service
 public class UserService {
 
-    private final UserRepository users;
-    private final UserSkillRepository userSkills;
+    private final UserRepository userRepository;
+    private final UserSkillRepository userSkillRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository users, UserSkillRepository userSkills, PasswordEncoder passwordEncoder) {
-        this.users = users;
-        this.userSkills = userSkills;
+    public UserService(
+            UserRepository userRepository,
+            UserSkillRepository userSkillRepository,
+            PasswordEncoder passwordEncoder
+    ) {
+        this.userRepository = userRepository;
+        this.userSkillRepository = userSkillRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<ProfileResponse> getProfileByEmail(String email) {
-        return users.findByEmailIgnoreCase(email).map(this::toProfileResponse);
+        return userRepository.findByEmailIgnoreCase(email).map(this::toProfileResponse);
     }
 
     public Optional<ProfileResponse> updateProfile(String email, ProfileUpdateRequest request) {
@@ -37,27 +41,27 @@ public class UserService {
     }
 
     public void changePassword(String email, ChangePasswordRequest request) {
-        User user = users.findByEmailIgnoreCase(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Current password is incorrect");
         }
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        users.save(user);
+        userRepository.save(user);
     }
 
     public void changeEmail(String email, ChangeEmailRequest request) {
-        User user = users.findByEmailIgnoreCase(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Password is incorrect");
         }
         String newEmail = request.newEmail().trim().toLowerCase();
-        if (users.existsByEmailIgnoreCase(newEmail)) {
+        if (userRepository.existsByEmailIgnoreCase(newEmail)) {
             throw new IllegalArgumentException("Email already in use");
         }
         user.setEmail(newEmail);
-        users.save(user);
+        userRepository.save(user);
     }
 
     public List<String> getSkills(UUID userId) {
@@ -69,17 +73,17 @@ public class UserService {
         if (normalized.isEmpty()) {
             throw new IllegalArgumentException("Skill name required");
         }
-        if (userSkills.existsByUserIdAndSkillNameIgnoreCase(user.getId(), normalized)) {
+        if (userSkillRepository.existsByUserIdAndSkillNameIgnoreCase(user.getId(), normalized)) {
             throw new IllegalArgumentException("Skill already added");
         }
-        userSkills.save(new UserSkill(user, normalized));
+        userSkillRepository.save(new UserSkill(user, normalized));
     }
 
     public boolean removeSkill(User user, String skillName) {
         if (skillName == null || skillName.isBlank()) {
             return false;
         }
-        userSkills.deleteByUserIdAndSkillNameIgnoreCase(user.getId(), skillName.trim());
+        userSkillRepository.deleteByUserIdAndSkillNameIgnoreCase(user.getId(), skillName.trim());
         return true;
     }
 
@@ -95,7 +99,7 @@ public class UserService {
     }
 
     private List<String> skillNamesFor(UUID userId) {
-        return userSkills.findByUserIdOrderBySkillNameAsc(userId).stream()
+        return userSkillRepository.findByUserIdOrderBySkillNameAsc(userId).stream()
                 .map(UserSkill::getSkillName)
                 .toList();
     }

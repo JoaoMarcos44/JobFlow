@@ -15,37 +15,45 @@ import java.util.List;
 
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtService jwt;
+    private final JwtService jwtService;
 
-    public JwtAuthFilter(JwtService jwt) {
-        this.jwt = jwt;
+    public JwtAuthFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7).trim();
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String bearerToken = authorizationHeader.substring(7).trim();
             try {
-                Claims claims = jwt.parseClaims(token);
-                String email = claims.getSubject();
-                if (email == null || email.isBlank() || !email.contains("@")) {
-                    String legacy = claims.get("email", String.class);
-                    if (legacy != null && !legacy.isBlank()) {
-                        email = legacy;
-                    }
-                }
+                Claims claims = jwtService.parseClaims(bearerToken);
+                String email = resolveEmailFromClaims(claims);
                 if (email != null && !email.isBlank()) {
-                    var auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    var authentication = new UsernamePasswordAuthenticationToken(email, null, List.of());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (Exception ignored) {
-                // invalid token -> no auth set; request may be rejected later
+                // token inválido — pedido segue sem autenticação
             }
         }
 
-        chain.doFilter(request, response);
+        filterChain.doFilter(request, response);
+    }
+
+    private static String resolveEmailFromClaims(Claims claims) {
+        String email = claims.getSubject();
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            String legacyEmail = claims.get("email", String.class);
+            if (legacyEmail != null && !legacyEmail.isBlank()) {
+                return legacyEmail;
+            }
+        }
+        return email;
     }
 }

@@ -16,23 +16,26 @@ import java.util.stream.Collectors;
 @Service
 public class MatchService {
 
-    private final UserSkillRepository userSkills;
-    private final MatchAnalysisRepository analyses;
+    private final UserSkillRepository userSkillRepository;
+    private final MatchAnalysisRepository matchAnalysisRepository;
 
-    public MatchService(UserSkillRepository userSkills, MatchAnalysisRepository analyses) {
-        this.userSkills = userSkills;
-        this.analyses = analyses;
+    public MatchService(
+            UserSkillRepository userSkillRepository,
+            MatchAnalysisRepository matchAnalysisRepository
+    ) {
+        this.userSkillRepository = userSkillRepository;
+        this.matchAnalysisRepository = matchAnalysisRepository;
     }
 
     public int calculateMatchScore(User user, Job job) {
         return calculateMatchScore(skillNamesFor(user.getId()), job.getTechnologies());
     }
 
-    public static int calculateMatchScore(List<String> userSkills, List<String> jobTechnologies) {
+    public static int calculateMatchScore(List<String> userSkillNames, List<String> jobTechnologies) {
         if (jobTechnologies == null || jobTechnologies.isEmpty()) {
             return 0;
         }
-        Set<String> normalizedUserSkills = userSkills.stream()
+        Set<String> normalizedUserSkills = userSkillNames.stream()
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
         Set<String> normalizedJobTechs = jobTechnologies.stream()
@@ -42,8 +45,12 @@ public class MatchService {
         return (int) Math.round((matched * 100.0) / normalizedJobTechs.size());
     }
 
-    public String generateMatchFeedback(List<String> userSkills, List<String> jobTechnologies, int matchScore) {
-        List<String> missing = skillsMissingFromJob(userSkills, jobTechnologies);
+    public String generateMatchFeedback(
+            List<String> userSkillNames,
+            List<String> jobTechnologies,
+            int matchScore
+    ) {
+        List<String> missing = skillsMissingFromJob(userSkillNames, jobTechnologies);
         if (matchScore >= 70) {
             return "Ótimo match! Você possui " + matchScore + "% das tecnologias exigidas.";
         }
@@ -56,37 +63,37 @@ public class MatchService {
     }
 
     public MatchAnalysis getOrCreateAnalysis(User user, Job job) {
-        return analyses.findFirstByUserIdAndJobIdOrderByCreatedAtDesc(user.getId(), job.getId())
+        return matchAnalysisRepository.findFirstByUserIdAndJobIdOrderByCreatedAtDesc(user.getId(), job.getId())
                 .orElseGet(() -> createAndSaveAnalysis(user, job));
     }
 
     private MatchAnalysis createAndSaveAnalysis(User user, Job job) {
-        List<String> skills = skillNamesFor(user.getId());
-        int score = calculateMatchScore(skills, job.getTechnologies());
-        String feedback = generateMatchFeedback(skills, job.getTechnologies(), score);
-        List<String> missing = skillsMissingFromJob(skills, job.getTechnologies());
+        List<String> skillNames = skillNamesFor(user.getId());
+        int score = calculateMatchScore(skillNames, job.getTechnologies());
+        String feedback = generateMatchFeedback(skillNames, job.getTechnologies(), score);
+        List<String> missing = skillsMissingFromJob(skillNames, job.getTechnologies());
 
         MatchAnalysis analysis = new MatchAnalysis(user, job, score);
         analysis.setAnalysisText(feedback);
         analysis.setMissingSkills(missing);
-        return analyses.save(analysis);
+        return matchAnalysisRepository.save(analysis);
     }
 
     private List<String> skillNamesFor(UUID userId) {
-        return userSkills.findByUserIdOrderBySkillNameAsc(userId).stream()
+        return userSkillRepository.findByUserIdOrderBySkillNameAsc(userId).stream()
                 .map(UserSkill::getSkillName)
                 .toList();
     }
 
-    private static List<String> skillsMissingFromJob(List<String> userSkills, List<String> jobTechnologies) {
+    private static List<String> skillsMissingFromJob(List<String> userSkillNames, List<String> jobTechnologies) {
         if (jobTechnologies == null) {
             return List.of();
         }
-        Set<String> normalizedUserSkills = userSkills.stream()
+        Set<String> normalizedUserSkills = userSkillNames.stream()
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
         return jobTechnologies.stream()
-                .filter(tech -> !normalizedUserSkills.contains(tech.toLowerCase()))
+                .filter(technology -> !normalizedUserSkills.contains(technology.toLowerCase()))
                 .toList();
     }
 }

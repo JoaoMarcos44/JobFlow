@@ -68,9 +68,9 @@ public class JobService {
     @Transactional
     public Job upsertJobFromCodante(CodanteJobPayload payload) {
         Job job = jobRepository.findByCodanteId(payload.id()).orElseGet(() -> {
-            Job fresh = new Job(payload.title(), payload.company());
-            fresh.setCodanteId(payload.id());
-            return fresh;
+            Job newJob = new Job(payload.title(), payload.company());
+            newJob.setCodanteId(payload.id());
+            return newJob;
         });
         applyCodantePayload(job, payload);
         return jobRepository.save(job);

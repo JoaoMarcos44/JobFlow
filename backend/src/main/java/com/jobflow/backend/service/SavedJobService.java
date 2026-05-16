@@ -21,24 +21,28 @@ import java.util.UUID;
 @Service
 public class SavedJobService {
 
-    private final SavedJobRepository savedJobs;
+    private final SavedJobRepository savedJobRepository;
     private final JobService jobService;
     private final MatchService matchService;
 
-    public SavedJobService(SavedJobRepository savedJobs, JobService jobService, MatchService matchService) {
-        this.savedJobs = savedJobs;
+    public SavedJobService(
+            SavedJobRepository savedJobRepository,
+            JobService jobService,
+            MatchService matchService
+    ) {
+        this.savedJobRepository = savedJobRepository;
         this.jobService = jobService;
         this.matchService = matchService;
     }
 
     @Transactional(readOnly = true)
     public Page<SavedJobResponse> listByUser(User user, Pageable pageable) {
-        return savedJobs.findByUserIdOrderBySavedAtDesc(user.getId(), pageable)
+        return savedJobRepository.findByUserIdOrderBySavedAtDesc(user.getId(), pageable)
                 .map(this::toSavedJobResponse);
     }
 
     public Optional<SavedJobResponse> getById(User user, UUID savedJobId) {
-        return savedJobs.findByUserIdAndIdWithJob(user.getId(), savedJobId)
+        return savedJobRepository.findByUserIdAndIdWithJob(user.getId(), savedJobId)
                 .map(this::toSavedJobResponse);
     }
 
@@ -50,54 +54,54 @@ public class SavedJobService {
     public SavedJobResponse save(User user, SavedJobRequest request) {
         Job job = jobService.findJobById(request.jobId())
                 .orElseThrow(() -> new IllegalArgumentException("Job not found"));
-        if (savedJobs.existsByUserIdAndJobId(user.getId(), job.getId())) {
+        if (savedJobRepository.existsByUserIdAndJobId(user.getId(), job.getId())) {
             throw new IllegalArgumentException("Job already saved");
         }
-        SavedJob saved = new SavedJob(user, job);
-        saved.setMatchScore(matchService.calculateMatchScore(user, job));
-        saved.setNotes(request.notes());
+        SavedJob savedJob = new SavedJob(user, job);
+        savedJob.setMatchScore(matchService.calculateMatchScore(user, job));
+        savedJob.setNotes(request.notes());
         if (request.status() != null && !request.status().isBlank()) {
-            saved.setStatus(request.status().trim());
+            savedJob.setStatus(request.status().trim());
         }
-        savedJobs.save(saved);
-        return toSavedJobResponse(saved);
+        savedJobRepository.save(savedJob);
+        return toSavedJobResponse(savedJob);
     }
 
     public Optional<SavedJobResponse> update(User user, UUID savedJobId, String notes, String status) {
-        return savedJobs.findByUserIdAndIdWithJob(user.getId(), savedJobId)
-                .map(saved -> {
+        return savedJobRepository.findByUserIdAndIdWithJob(user.getId(), savedJobId)
+                .map(savedJob -> {
                     if (notes != null) {
-                        saved.setNotes(notes);
+                        savedJob.setNotes(notes);
                     }
                     if (status != null && !status.isBlank()) {
-                        saved.setStatus(status.trim());
+                        savedJob.setStatus(status.trim());
                     }
-                    saved.setUpdatedAt(Instant.now());
-                    savedJobs.save(saved);
-                    return toSavedJobResponse(saved);
+                    savedJob.setUpdatedAt(Instant.now());
+                    savedJobRepository.save(savedJob);
+                    return toSavedJobResponse(savedJob);
                 });
     }
 
     public boolean delete(User user, UUID savedJobId) {
-        return savedJobs.findByUserIdAndId(user.getId(), savedJobId)
-                .map(saved -> {
-                    savedJobs.delete(saved);
+        return savedJobRepository.findByUserIdAndId(user.getId(), savedJobId)
+                .map(savedJob -> {
+                    savedJobRepository.delete(savedJob);
                     return true;
                 })
                 .orElse(false);
     }
 
-    private SavedJobResponse toSavedJobResponse(SavedJob saved) {
-        Job job = saved.getJob();
-        JobResponse jobResponse = JobMapper.toResponse(job, saved.getMatchScore());
+    private SavedJobResponse toSavedJobResponse(SavedJob savedJob) {
+        Job job = savedJob.getJob();
+        JobResponse jobResponse = JobMapper.toResponse(job, savedJob.getMatchScore());
         return new SavedJobResponse(
-                saved.getId(),
+                savedJob.getId(),
                 jobResponse,
-                saved.getNotes(),
-                saved.getMatchScore(),
-                saved.getStatus(),
-                saved.getSavedAt(),
-                saved.getUpdatedAt()
+                savedJob.getNotes(),
+                savedJob.getMatchScore(),
+                savedJob.getStatus(),
+                savedJob.getSavedAt(),
+                savedJob.getUpdatedAt()
         );
     }
 }

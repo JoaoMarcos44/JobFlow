@@ -23,15 +23,15 @@ public class ResumeService {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     );
 
-    private final ResumeRepository resumes;
+    private final ResumeRepository resumeRepository;
 
-    public ResumeService(ResumeRepository resumes) {
-        this.resumes = resumes;
+    public ResumeService(ResumeRepository resumeRepository) {
+        this.resumeRepository = resumeRepository;
     }
 
     @Transactional(readOnly = true)
     public List<ResumeSummaryResponse> listByUser(User user) {
-        return resumes.findByUserIdOrderByCreatedAtDesc(user.getId())
+        return resumeRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
                 .stream()
                 .map(this::toSummary)
                 .toList();
@@ -39,7 +39,7 @@ public class ResumeService {
 
     @Transactional(readOnly = true)
     public Optional<Resume> getById(User user, UUID id) {
-        return resumes.findByUserIdAndId(user.getId(), id);
+        return resumeRepository.findByUserIdAndId(user.getId(), id);
     }
 
     @Transactional
@@ -48,13 +48,13 @@ public class ResumeService {
         String contentType = file.getContentType();
         String fileName = fileNameOrDefault(file, contentType, defaultNameFor(contentType));
         Resume resume = new Resume(user, fileName, contentType, file.getBytes());
-        resumes.save(resume);
+        resumeRepository.save(resume);
         return toSummary(resume);
     }
 
     @Transactional
     public ResumeSummaryResponse replace(User user, UUID id, MultipartFile file) throws IOException {
-        Resume resume = resumes.findByUserIdAndId(user.getId(), id)
+        Resume resume = resumeRepository.findByUserIdAndId(user.getId(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Currículo não encontrado"));
         assertValidFile(file, false);
         String contentType = file.getContentType();
@@ -62,15 +62,15 @@ public class ResumeService {
         resume.setFileName(fileName);
         resume.setContentType(contentType != null ? contentType : resume.getContentType());
         resume.setFileContent(file.getBytes());
-        resumes.save(resume);
+        resumeRepository.save(resume);
         return toSummary(resume);
     }
 
     @Transactional
     public boolean delete(User user, UUID id) {
-        return resumes.findByUserIdAndId(user.getId(), id)
-                .map(r -> {
-                    resumes.delete(r);
+        return resumeRepository.findByUserIdAndId(user.getId(), id)
+                .map(resume -> {
+                    resumeRepository.delete(resume);
                     return true;
                 })
                 .orElse(false);

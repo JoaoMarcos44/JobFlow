@@ -8,22 +8,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthenticatedUserService {
 
-    private final UserRepository users;
+    private final UserRepository userRepository;
 
-    public AuthenticatedUserService(UserRepository users) {
-        this.users = users;
+    public AuthenticatedUserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     /** Utilizador autenticado ou {@code null} se não houver sessão ou registo. */
-    public User resolveUser(Authentication auth) {
-        if (auth == null || auth.getName() == null) {
+    public User resolveUser(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
             return null;
         }
-        return users.findByEmailIgnoreCase(auth.getName()).orElse(null);
+        return userRepository.findByEmailIgnoreCase(authentication.getName()).orElse(null);
     }
 
-    public User requireUser(Authentication auth) {
-        User user = resolveUser(auth);
+    public User requireUser(Authentication authentication) {
+        User user = resolveUser(authentication);
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }

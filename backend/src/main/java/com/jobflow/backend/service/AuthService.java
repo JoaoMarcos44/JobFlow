@@ -13,14 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-    private final UserRepository users;
-    private final PasswordEncoder encoder;
-    private final JwtService jwt;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository users, PasswordEncoder encoder, JwtService jwt) {
-        this.users = users;
-        this.encoder = encoder;
-        this.jwt = jwt;
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService
+    ) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -29,25 +33,25 @@ public class AuthService {
         if (email.isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
-        if (users.existsByEmailIgnoreCase(email)) {
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new EmailAlreadyRegisteredException();
         }
-        User user = new User(email, encoder.encode(request.password()));
-        users.save(user);
-        return jwt.issueToken(user);
+        User user = new User(email, passwordEncoder.encode(request.password()));
+        userRepository.save(user);
+        return jwtService.issueToken(user);
     }
 
     public String login(LoginRequest request) {
         String email = normalizeEmail(request.email());
 
-        User user = users.findByEmailIgnoreCase(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!encoder.matches(request.password(), user.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 
-        return jwt.issueToken(user);
+        return jwtService.issueToken(user);
     }
 
     private String normalizeEmail(String email) {
@@ -60,6 +64,6 @@ public class AuthService {
      */
     public void requestPasswordReset(String email) {
         normalizeEmail(email);
-        // opcional: users.findByEmailIgnoreCase(email).ifPresent(u -> mailService.send(...));
+        // opcional: userRepository.findByEmailIgnoreCase(email).ifPresent(user -> mailService.send(...));
     }
 }
