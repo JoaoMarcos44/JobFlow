@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "token-efficiency": {
+      "source": "delphine-l/claude_global",
+      "sourceType": "github",
+      "skillPath": "skills/claude-meta/token-efficiency/SKILL.md",
+      "computedHash": "0c1bcd0d1139fe6ebf4f2836d7baffcef02a494afec04556977b07eb8ab8af4f"
+    }
+  }
+}

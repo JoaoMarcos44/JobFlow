@@ -1,18 +1,17 @@
 import gsap from 'gsap';
 
-/**
- * Entrada fluida para cartões de login / registo (seletores relativos a `root`).
- */
+/** Entrada fluida para cartões de login / registo (seletores relativos a `root`). */
 export function createAuthCardEntrance(root: HTMLElement): gsap.Context {
   return gsap.context(() => {
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-    tl.from('.auth-anim-card', {
-      y: 32,
-      opacity: 0,
-      scale: 0.985,
-      duration: 0.75,
-    })
+    timeline
+      .from('.auth-anim-card', {
+        y: 32,
+        opacity: 0,
+        scale: 0.985,
+        duration: 0.75,
+      })
       .from(
         '.auth-anim-brand > *',
         { y: 20, opacity: 0, stagger: 0.09, duration: 0.5 },
@@ -24,15 +23,13 @@ export function createAuthCardEntrance(root: HTMLElement): gsap.Context {
         '-=0.32',
       );
 
-    const optionsEl = root.querySelector('.auth-anim-options');
-    if (optionsEl) {
-      tl.from(optionsEl, { opacity: 0, y: 10, duration: 0.38 }, '-=0.22');
+    const optionsBlock = root.querySelector('.auth-anim-options');
+    if (optionsBlock) {
+      timeline.from(optionsBlock, { opacity: 0, y: 10, duration: 0.38 }, '-=0.22');
     }
 
-    tl.from('.auth-anim-submit', { y: 12, opacity: 0, duration: 0.42 }, '-=0.28').from(
-      '.auth-anim-footer',
-      { opacity: 0, y: 8, duration: 0.4 },
-      '-=0.22',
-    );
+    timeline
+      .from('.auth-anim-submit', { y: 12, opacity: 0, duration: 0.42 }, '-=0.28')
+      .from('.auth-anim-footer', { opacity: 0, y: 8, duration: 0.4 }, '-=0.22');
   }, root);
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 
-const BASE_URL = '/codante-api/api/job-board';
+const CODANTE_JOBS_URL = '/codante-api/api/job-board';
 
 export interface CodanteJob {
   id: number;
@@ -52,18 +52,22 @@ export class JobBoardService {
 
   getJobs(params?: { search?: string; page?: number }): Observable<JobListResponse | null> {
     let httpParams = new HttpParams();
-    if (params?.search?.trim()) httpParams = httpParams.set('search', params.search.trim());
-    if (params?.page != null && params.page >= 1) httpParams = httpParams.set('page', params.page.toString());
+    if (params?.search?.trim()) {
+      httpParams = httpParams.set('search', params.search.trim());
+    }
+    if (params?.page != null && params.page >= 1) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
 
-    return this.http.get<JobListResponse>(`${BASE_URL}/jobs`, { params: httpParams }).pipe(
-      catchError(() => of(null))
+    return this.http.get<JobListResponse>(`${CODANTE_JOBS_URL}/jobs`, { params: httpParams }).pipe(
+      catchError(() => of(null)),
     );
   }
 
   getJobById(id: number): Observable<CodanteJob | null> {
-    return this.http.get<JobDetailResponse>(`${BASE_URL}/jobs/${id}`).pipe(
-      map((res) => res?.data ?? null),
-      catchError(() => of(null))
+    return this.http.get<JobDetailResponse>(`${CODANTE_JOBS_URL}/jobs/${id}`).pipe(
+      map((response) => response?.data ?? null),
+      catchError(() => of(null)),
     );
   }
 }

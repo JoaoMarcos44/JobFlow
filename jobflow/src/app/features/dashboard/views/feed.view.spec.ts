@@ -117,16 +117,16 @@ describe('FeedViewComponent', () => {
     const fixture = TestBed.createComponent(FeedViewComponent);
     fixture.detectChanges();
     await fixture.whenStable();
-    const cmp = fixture.componentInstance;
-    cmp.setScheduleCategory('internship');
-    cmp.setWorkModeFilter('remote');
-    cmp.toggleSkillFilter('javascript');
-    expect(cmp.hasActiveFilters()).toBe(true);
-    cmp.clearFilters();
-    expect(cmp.scheduleCategory()).toBe('all');
-    expect(cmp.workModeFilter()).toBe('all');
-    expect(cmp.selectedSkillIds()).toEqual([]);
-    expect(cmp.hasActiveFilters()).toBe(false);
+    const component = fixture.componentInstance;
+    component.setScheduleCategory('internship');
+    component.setWorkModeFilter('remote');
+    component.toggleSkillFilter('javascript');
+    expect(component.hasActiveFilters()).toBe(true);
+    component.clearFilters();
+    expect(component.scheduleCategory()).toBe('all');
+    expect(component.workModeFilter()).toBe('all');
+    expect(component.selectedSkillIds()).toEqual([]);
+    expect(component.hasActiveFilters()).toBe(false);
   });
 
   it('caso de uso: painel de habilidades começa fechado e abre ao alternar', async () => {
@@ -134,11 +134,11 @@ describe('FeedViewComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('#feed-skills-panel')).toBeNull();
+    const hostElement = fixture.nativeElement as HTMLElement;
+    expect(hostElement.querySelector('#feed-skills-panel')).toBeNull();
     fixture.componentInstance.toggleSkillsPanel();
     fixture.detectChanges();
-    expect(el.querySelector('#feed-skills-panel')).toBeTruthy();
+    expect(hostElement.querySelector('#feed-skills-panel')).toBeTruthy();
   });
 
   it('caso de uso: na página 1 botão Anterior está disabled (paginação)', async () => {
@@ -179,8 +179,8 @@ describe('FeedViewComponent', () => {
     const fixture = TestBed.createComponent(FeedViewComponent);
     fixture.detectChanges();
     await fixture.whenStable();
-    const cmp = fixture.componentInstance;
-    expect(cmp.companyInitial(' google ')).toBe('G');
-    expect(cmp.scheduleLabel('full-time')).toBe('Tempo integral');
+    const component = fixture.componentInstance;
+    expect(component.companyInitial(' google ')).toBe('G');
+    expect(component.scheduleLabel('full-time')).toBe('Tempo integral');
   });
 });

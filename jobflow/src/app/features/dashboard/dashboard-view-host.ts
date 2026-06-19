@@ -16,9 +16,9 @@ export function viewRoot(host: HTMLElement, cssSelector: string): HTMLElement {
  * Devolve contexto GSAP para `revert()` no destroy.
  */
 export function mountDashboardView(root: HTMLElement, highlight?: ViewHighlightAnimation): gsap.Context {
-  const ctx = createDashboardViewStagger(root);
+  const entranceAnimation = createDashboardViewStagger(root);
   if (highlight) {
     queueMicrotask(() => animateElementsFrom(root, highlight.selector, highlight.vars));
   }
-  return ctx;
+  return entranceAnimation;
 }

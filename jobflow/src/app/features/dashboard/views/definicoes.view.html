@@ -15,8 +15,8 @@
           <input type="password" id="new-password" [(ngModel)]="newPassword" name="newPassword" placeholder="••••••••" minlength="8" class="input">
         </div>
         <button type="submit" class="btn-primary">Atualizar palavra-passe</button>
-        @if (msgPassword) {
-          <p class="msg" [class.msg-success]="msgPasswordSuccess">{{ msgPassword }}</p>
+        @if (msgPassword()) {
+          <p class="msg" [class.msg-success]="msgPassword()!.success">{{ msgPassword()!.text }}</p>
         }
       </form>
     </div>
@@ -32,8 +32,8 @@
           <input type="password" id="email-password" [(ngModel)]="emailPassword" name="emailPassword" placeholder="••••••••" class="input">
         </div>
         <button type="submit" class="btn-primary">Atualizar e-mail</button>
-        @if (msgEmail) {
-          <p class="msg" [class.msg-success]="msgEmailSuccess">{{ msgEmail }}</p>
+        @if (msgEmail()) {
+          <p class="msg" [class.msg-success]="msgEmail()!.success">{{ msgEmail()!.text }}</p>
         }
       </form>
     </div>

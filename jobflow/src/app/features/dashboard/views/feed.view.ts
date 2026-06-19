@@ -31,9 +31,9 @@ import { companyInitial, scheduleLabel, shortenText, tagsFromJob } from './feed-
   styleUrls: ['./feed.view.scss'],
 })
 export class FeedViewComponent implements OnInit, OnDestroy {
-  private readonly jobBoard = inject(JobBoardService);
+  private readonly jobBoardService = inject(JobBoardService);
   private readonly router = inject(Router);
-  private readonly savedJobs = inject(SavedJobsService);
+  private readonly savedJobsService = inject(SavedJobsService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
@@ -85,15 +85,15 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   loadJobs(): void {
     this.loading.set(true);
     this.error.set(false);
-    this.jobBoard
+    this.jobBoardService
       .getJobs({ search: this.searchTerm() || undefined, page: this.currentPage() })
-      .subscribe((res) => {
+      .subscribe((jobListResponse) => {
         this.loading.set(false);
-        if (res == null) {
+        if (jobListResponse == null) {
           this.error.set(true);
           this.response.set(null);
         } else {
-          this.response.set(res);
+          this.response.set(jobListResponse);
           queueMicrotask(() => this.animateJobCards());
         }
       });
@@ -153,13 +153,13 @@ export class FeedViewComponent implements OnInit, OnDestroy {
   saveJob(event: Event, job: CodanteJob): void {
     event.stopPropagation();
     event.preventDefault();
-    this.savedJobs.addJob(job).subscribe((ok) => {
-      if (ok) this.flashSaveFeedback();
+    this.savedJobsService.addJob(job).subscribe((savedSuccessfully) => {
+      if (savedSuccessfully) this.flashSaveFeedback();
     });
   }
 
   isSaved(job: CodanteJob): boolean {
-    return this.savedJobs.isSaved(job.id);
+    return this.savedJobsService.isSaved(job.id);
   }
 
   readonly companyInitial = companyInitial;

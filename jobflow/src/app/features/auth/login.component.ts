@@ -20,19 +20,19 @@ import { createAuthCardEntrance } from './auth-card.animations';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnDestroy {
-  private readonly auth = inject(AuthService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private ctx?: ReturnType<typeof createAuthCardEntrance>;
+  private entranceAnimation?: ReturnType<typeof createAuthCardEntrance>;
 
   constructor() {
     afterNextRender(() => {
-      this.ctx = createAuthCardEntrance(this.host.nativeElement);
+      this.entranceAnimation = createAuthCardEntrance(this.host.nativeElement);
     });
   }
 
   ngOnDestroy(): void {
-    this.ctx?.revert();
+    this.entranceAnimation?.revert();
   }
 
   readonly loading = signal(false);
@@ -57,19 +57,19 @@ export class LoginComponent implements OnDestroy {
     }
 
     this.loading.set(true);
-    this.auth.login(this.email, this.password).subscribe((result) => {
+    this.authService.login(this.email, this.password).subscribe((result) => {
       this.loading.set(false);
       if (result.success) {
         this.message.set({ text: 'Login efetuado com sucesso. A redirecionar...', type: 'success' });
         this.router.navigate(['/dashboard/feed']);
       } else {
-        const isNetwork =
+        const isNetworkError =
           result.error.includes('rede') ||
           result.error.includes('fetch') ||
           result.error.includes('Network') ||
           result.error.includes('Failed');
         this.message.set({ text: result.error, type: 'error' });
-        if (isNetwork) {
+        if (isNetworkError) {
           this.showDemoLink.set(true);
         }
       }

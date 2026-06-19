@@ -13,7 +13,9 @@ export function companyInitial(company: string): string {
 
 export function tagsFromJob(job: CodanteJob): string[] {
   const text = (job.requirements || job.description || '').replace(/\n/g, ' ');
-  const words = text.split(/[\s,;()-]+/).filter((w) => w.length > 2 && /^[A-Za-z#]+$/.test(w));
+  const words = text
+    .split(/[\s,;()-]+/)
+    .filter((word) => word.length > 2 && /^[A-Za-z#]+$/.test(word));
   const seen = new Set<string>();
   const tags: string[] = [];
   for (const word of words) {

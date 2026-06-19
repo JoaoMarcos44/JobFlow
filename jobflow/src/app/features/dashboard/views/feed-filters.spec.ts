@@ -55,15 +55,15 @@ describe('feed-filters', () => {
       job({ id: 3, schedule: 'full-time', description: 'presencial' }),
     ];
     const out = filterJobs(jobs, 'employment', 'remote', []);
-    expect(out.map((j) => j.id)).toEqual([2]);
+    expect(out.map((job) => job.id)).toEqual([2]);
   });
 
   it('matchesSelectedSkills: exige todas as skills escolhidas', () => {
-    const j = job({ requirements: 'PHP 8+ e Laravel; JavaScript moderno' });
-    expect(matchesSelectedSkills(j, [])).toBe(true);
-    expect(matchesSelectedSkills(j, ['php'])).toBe(true);
-    expect(matchesSelectedSkills(j, ['php', 'javascript'])).toBe(true);
-    expect(matchesSelectedSkills(j, ['php', 'java'])).toBe(false);
+    const sampleJob = job({ requirements: 'PHP 8+ e Laravel; JavaScript moderno' });
+    expect(matchesSelectedSkills(sampleJob, [])).toBe(true);
+    expect(matchesSelectedSkills(sampleJob, ['php'])).toBe(true);
+    expect(matchesSelectedSkills(sampleJob, ['php', 'javascript'])).toBe(true);
+    expect(matchesSelectedSkills(sampleJob, ['php', 'java'])).toBe(false);
   });
 
   it('filterJobs aplica skills', () => {
@@ -72,7 +72,7 @@ describe('feed-filters', () => {
       job({ id: 2, requirements: 'Somente PHP' }),
       job({ id: 3, requirements: 'PHP 8+ e React.js no mesmo projeto' }),
     ];
-    expect(filterJobs(jobs, 'all', 'all', ['react']).map((x) => x.id)).toEqual([1, 3]);
-    expect(filterJobs(jobs, 'all', 'all', ['php', 'react']).map((x) => x.id)).toEqual([3]);
+    expect(filterJobs(jobs, 'all', 'all', ['react']).map((job) => job.id)).toEqual([1, 3]);
+    expect(filterJobs(jobs, 'all', 'all', ['php', 'react']).map((job) => job.id)).toEqual([3]);
   });
 });

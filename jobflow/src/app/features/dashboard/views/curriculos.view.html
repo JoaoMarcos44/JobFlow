@@ -18,8 +18,8 @@
       <button type="submit" class="btn-primary" [disabled]="!selectedFileName || saving">
         {{ saving ? 'A guardar...' : 'Guardar currículo' }}
       </button>
-      @if (message) {
-        <p class="msg" [class.msg-success]="messageSuccess">{{ message }}</p>
+      @if (uploadMsg()) {
+        <p class="msg" [class.msg-success]="uploadMsg()!.success">{{ uploadMsg()!.text }}</p>
       }
     </form>
     <h3 class="section-title">Os meus currículos</h3>

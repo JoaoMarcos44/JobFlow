@@ -61,22 +61,22 @@ const SKILL_PATTERNS: Record<string, RegExp> = {
 };
 
 function jobTextForMatching(job: CodanteJob): string {
-  const raw = `${job.title}\n${job.description}\n${job.requirements}`;
+  const combinedText = `${job.title}\n${job.description}\n${job.requirements}`;
   try {
-    return raw.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    return combinedText.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
   } catch {
-    return raw.toLowerCase();
+    return combinedText.toLowerCase();
   }
 }
 
 /** Infere modo de trabalho a partir do texto da vaga (a API não tem campo dedicado). */
 export function inferWorkMode(job: CodanteJob): WorkMode {
-  const t = `${job.title} ${job.description} ${job.requirements} ${job.city}`.toLowerCase();
+  const jobText = `${job.title} ${job.description} ${job.requirements} ${job.city}`.toLowerCase();
   const hasRemote = /\b(remoto|remote|teletrabalho|home\s*office|wfh|100\s*%\s*remoto|totalmente\s+remoto)\b/i.test(
-    t,
+    jobText,
   );
-  const hasHybrid = /\b(h[íi]brido|hybrid)\b/i.test(t);
-  const hasOnsite = /\b(presencial|on-?site|no\s+escrit[óo]rio|escrit[óo]rio(\s+central)?)\b/i.test(t);
+  const hasHybrid = /\b(h[íi]brido|hybrid)\b/i.test(jobText);
+  const hasOnsite = /\b(presencial|on-?site|no\s+escrit[óo]rio|escrit[óo]rio(\s+central)?)\b/i.test(jobText);
 
   if (hasHybrid) return 'hybrid';
   if (hasRemote && hasOnsite) return 'hybrid';
@@ -87,18 +87,18 @@ export function inferWorkMode(job: CodanteJob): WorkMode {
 
 export function matchesScheduleCategory(job: CodanteJob, category: ScheduleCategory): boolean {
   if (category === 'all') return true;
-  const s = (job.schedule || '').toLowerCase();
-  if (category === 'internship') return s === 'internship';
-  if (category === 'employment') return s !== 'internship';
+  const schedule = (job.schedule || '').toLowerCase();
+  if (category === 'internship') return schedule === 'internship';
+  if (category === 'employment') return schedule !== 'internship';
   return true;
 }
 
 export function matchesWorkModeFilter(job: CodanteJob, filter: WorkModeFilter): boolean {
   if (filter === 'all') return true;
-  const m = inferWorkMode(job);
-  if (filter === 'remote') return m === 'remote' || m === 'hybrid';
-  if (filter === 'hybrid') return m === 'hybrid';
-  if (filter === 'onsite') return m === 'onsite' || m === 'unknown';
+  const workMode = inferWorkMode(job);
+  if (filter === 'remote') return workMode === 'remote' || workMode === 'hybrid';
+  if (filter === 'hybrid') return workMode === 'hybrid';
+  if (filter === 'onsite') return workMode === 'onsite' || workMode === 'unknown';
   return true;
 }
 
@@ -119,9 +119,9 @@ export function filterJobs(
   selectedSkillIds: readonly string[],
 ): CodanteJob[] {
   return jobs.filter(
-    (j) =>
-      matchesScheduleCategory(j, scheduleCategory) &&
-      matchesWorkModeFilter(j, workMode) &&
-      matchesSelectedSkills(j, selectedSkillIds),
+    (job) =>
+      matchesScheduleCategory(job, scheduleCategory) &&
+      matchesWorkModeFilter(job, workMode) &&
+      matchesSelectedSkills(job, selectedSkillIds),
   );
 }

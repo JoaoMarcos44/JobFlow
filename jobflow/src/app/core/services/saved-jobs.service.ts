@@ -41,24 +41,24 @@ interface SpringPageDto {
   content: SavedJobResponseDto[];
 }
 
-function normalizeStatus(raw: string): KanbanStatus {
-  if (raw === 'applied' || raw === 'offer') return raw;
-  if (raw === 'archived') return 'offer';
+function normalizeStatus(statusFromApi: string): KanbanStatus {
+  if (statusFromApi === 'applied' || statusFromApi === 'offer') return statusFromApi;
+  if (statusFromApi === 'archived') return 'offer';
   return 'saved';
 }
 
-function toSavedJobItem(row: SavedJobResponseDto): SavedJobItem {
+function toSavedJobItem(dto: SavedJobResponseDto): SavedJobItem {
   return {
-    id: row.id,
+    id: dto.id,
     job: {
-      id: row.job.id,
-      title: row.job.title,
-      company: row.job.company,
-      codanteId: row.job.codanteId ?? null,
+      id: dto.job.id,
+      title: dto.job.title,
+      company: dto.job.company,
+      codanteId: dto.job.codanteId ?? null,
     },
-    savedAt: row.savedAt,
-    status: normalizeStatus(row.status),
-    matchScore: row.matchScore,
+    savedAt: dto.savedAt,
+    status: normalizeStatus(dto.status),
+    matchScore: dto.matchScore,
   };
 }
 
@@ -106,9 +106,12 @@ export class SavedJobsService {
       },
     };
     return this.http.post<SavedJobResponseDto>(`${API_BASE}/from-codante`, body).pipe(
-      tap((row) => {
-        const item = toSavedJobItem(row);
-        this.items.update((current) => [...current.filter((x) => x.id !== item.id), item]);
+      tap((dto) => {
+        const item = toSavedJobItem(dto);
+        this.items.update((current) => [
+          ...current.filter((existing) => existing.id !== item.id),
+          item,
+        ]);
       }),
       map(() => true),
       catchError(() => of(false)),
@@ -119,14 +122,14 @@ export class SavedJobsService {
     this.http
       .put<SavedJobResponseDto>(`${API_BASE}/${savedJobId}`, { status })
       .pipe(
-        tap((row) => {
+        tap((dto) => {
           this.items.update((current) =>
             current.map((item) =>
               item.id === savedJobId
                 ? {
                     ...item,
-                    status: normalizeStatus(row.status),
-                    matchScore: row.matchScore,
+                    status: normalizeStatus(dto.status),
+                    matchScore: dto.matchScore,
                   }
                 : item,
             ),

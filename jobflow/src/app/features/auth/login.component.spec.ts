@@ -32,21 +32,21 @@ describe('LoginComponent', () => {
 
   it('onSubmit com e-mail inválido não chama HTTP', () => {
     const fixture = TestBed.createComponent(LoginComponent);
-    const cmp = fixture.componentInstance;
-    cmp.email = 'invalido';
-    cmp.password = '123456';
-    cmp.onSubmit();
+    const component = fixture.componentInstance;
+    component.email = 'invalido';
+    component.password = '123456';
+    component.onSubmit();
     httpMock.expectNone('/api/auth/login');
-    expect(cmp.message()?.type).toBe('error');
+    expect(component.message()?.type).toBe('error');
   });
 
   it('onSubmit com palavra-passe curta não chama HTTP', () => {
     const fixture = TestBed.createComponent(LoginComponent);
-    const cmp = fixture.componentInstance;
-    cmp.email = 'a@b.com';
-    cmp.password = '12345';
-    cmp.onSubmit();
+    const component = fixture.componentInstance;
+    component.email = 'a@b.com';
+    component.password = '12345';
+    component.onSubmit();
     httpMock.expectNone('/api/auth/login');
-    expect(cmp.message()?.type).toBe('error');
+    expect(component.message()?.type).toBe('error');
   });
 });

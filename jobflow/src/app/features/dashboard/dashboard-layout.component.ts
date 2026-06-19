@@ -21,12 +21,12 @@ import { createDashboardShellEntrance } from './dashboard.animations';
   styleUrls: ['./dashboard-layout.component.scss'],
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
-  private readonly auth = inject(AuthService);
-  private readonly savedJobs = inject(SavedJobsService);
+  private readonly authService = inject(AuthService);
+  private readonly savedJobsService = inject(SavedJobsService);
   private readonly router = inject(Router);
-  protected readonly theme = inject(ThemeService);
+  protected readonly themeService = inject(ThemeService);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private shellCtx?: ReturnType<typeof createDashboardShellEntrance>;
+  private shellEntranceAnimation?: ReturnType<typeof createDashboardShellEntrance>;
 
   profileMenuOpen = false;
   userName = 'Utilizador';
@@ -38,7 +38,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       requestAnimationFrame(() => {
         const shell = this.host.nativeElement.querySelector('.dashboard-shell') as HTMLElement | null;
         if (shell) {
-          this.shellCtx = createDashboardShellEntrance(shell);
+          this.shellEntranceAnimation = createDashboardShellEntrance(shell);
         }
       });
     });
@@ -46,15 +46,15 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadProfile();
-    this.savedJobs.reloadFromApi();
+    this.savedJobsService.reloadFromApi();
   }
 
   ngOnDestroy(): void {
-    this.shellCtx?.revert();
+    this.shellEntranceAnimation?.revert();
   }
 
   private loadProfile(): void {
-    const token = this.auth.getToken();
+    const token = this.authService.getToken();
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1])) as { sub?: string; email?: string };
@@ -69,7 +69,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.auth.removeToken();
+    this.authService.removeToken();
     this.profileMenuOpen = false;
     this.router.navigate(['/login']);
   }

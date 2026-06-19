@@ -12,7 +12,7 @@ import { mountDashboardView, viewRoot } from '../dashboard-view-host';
   styleUrls: ['./definicoes.view.scss'],
 })
 export class DefinicoesViewComponent implements OnDestroy {
-  private readonly settings = inject(UserSettingsService);
+  private readonly userSettingsService = inject(UserSettingsService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
@@ -20,13 +20,11 @@ export class DefinicoesViewComponent implements OnDestroy {
   newPassword = '';
   newEmail = '';
   emailPassword = '';
-  msgPassword = '';
-  msgEmail = '';
-  msgPasswordSuccess = false;
-  msgEmailSuccess = false;
 
   readonly savingPassword = signal(false);
   readonly savingEmail = signal(false);
+  readonly msgPassword = signal<{ text: string; success: boolean } | null>(null);
+  readonly msgEmail = signal<{ text: string; success: boolean } | null>(null);
 
   constructor() {
     afterNextRender(() => {
@@ -47,17 +45,15 @@ export class DefinicoesViewComponent implements OnDestroy {
   onSubmitPassword(): void {
     if (this.savingPassword()) return;
     this.savingPassword.set(true);
-    this.msgPassword = '';
-    this.settings.changePassword(this.currentPassword, this.newPassword).subscribe((result) => {
+    this.msgPassword.set(null);
+    this.userSettingsService.changePassword(this.currentPassword, this.newPassword).subscribe((result) => {
       this.savingPassword.set(false);
       if (result.success) {
-        this.msgPassword = 'Palavra-passe atualizada.';
-        this.msgPasswordSuccess = true;
+        this.msgPassword.set({ text: 'Palavra-passe atualizada.', success: true });
         this.currentPassword = '';
         this.newPassword = '';
       } else {
-        this.msgPassword = result.error;
-        this.msgPasswordSuccess = false;
+        this.msgPassword.set({ text: result.error, success: false });
       }
     });
   }
@@ -65,17 +61,15 @@ export class DefinicoesViewComponent implements OnDestroy {
   onSubmitEmail(): void {
     if (this.savingEmail()) return;
     this.savingEmail.set(true);
-    this.msgEmail = '';
-    this.settings.changeEmail(this.newEmail, this.emailPassword).subscribe((result) => {
+    this.msgEmail.set(null);
+    this.userSettingsService.changeEmail(this.newEmail, this.emailPassword).subscribe((result) => {
       this.savingEmail.set(false);
       if (result.success) {
-        this.msgEmail = 'E-mail atualizado. Pode ser necessário iniciar sessão novamente.';
-        this.msgEmailSuccess = true;
+        this.msgEmail.set({ text: 'E-mail atualizado. Pode ser necessário iniciar sessão novamente.', success: true });
         this.newEmail = '';
         this.emailPassword = '';
       } else {
-        this.msgEmail = result.error;
-        this.msgEmailSuccess = false;
+        this.msgEmail.set({ text: result.error, success: false });
       }
     });
   }

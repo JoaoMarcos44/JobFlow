@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
+import { readApiErrorMessage } from '../http/api-error';
 
-type SettingsResult = { success: true } | { success: false; error: string };
+export type SettingsResult = { success: true } | { success: false; error: string };
 
 @Injectable({ providedIn: 'root' })
 export class UserSettingsService {
@@ -13,7 +14,12 @@ export class UserSettingsService {
       .put<void>('/api/users/password', { currentPassword, newPassword })
       .pipe(
         map(() => ({ success: true as const })),
-        catchError((err) => of({ success: false as const, error: this.readError(err) })),
+        catchError((error) =>
+          of({
+            success: false as const,
+            error: readApiErrorMessage(error, `Erro (${error?.status ?? 'rede'}).`),
+          }),
+        ),
       );
   }
 
@@ -22,15 +28,12 @@ export class UserSettingsService {
       .put<void>('/api/users/email', { newEmail: newEmail.trim(), password })
       .pipe(
         map(() => ({ success: true as const })),
-        catchError((err) => of({ success: false as const, error: this.readError(err) })),
+        catchError((error) =>
+          of({
+            success: false as const,
+            error: readApiErrorMessage(error, `Erro (${error?.status ?? 'rede'}).`),
+          }),
+        ),
       );
-  }
-
-  private readError(err: { error?: { error?: string; message?: string }; status?: number }): string {
-    return (
-      err?.error?.error ||
-      err?.error?.message ||
-      (err?.status === 400 ? 'Dados inválidos. Verifique os campos.' : `Erro (${err?.status ?? 'rede'}).`)
-    );
   }
 }

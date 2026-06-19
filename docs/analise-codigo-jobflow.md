@@ -9,30 +9,31 @@
 
 ## 📑 Índice
 
-1. [Requisitos Não Implementados](#1-requisitos-não-implementados)
+1. [Requisitos Analisados](#1-requisitos-analisados)
 2. [Violações de Boas Práticas de POO](#2-violações-de-boas-práticas-de-poo)
 3. [Violações dos Princípios SOLID](#3-violações-dos-princípios-solid)
 4. [Violações de Clean Code](#4-violações-de-clean-code)
 5. [Padrões de Projeto Ausentes ou Incompletos](#5-padrões-de-projeto-ausentes-ou-incompletos)
 6. [Problemas Arquiteturais](#6-problemas-arquiteturais)
 7. [Resumo dos Problemas](#7-resumo-dos-problemas)
+8. [Melhorias e Refatorações Implementadas](#8-melhorias-e-refatorações-implementadas)
 
 ---
 
-## 1. Requisitos Não Implementados
+## 1. Requisitos Analisados
 
-| # | Requisito Esperado | Problema no Código |
-|---|--------------------|--------------------|
-| NI-01 | **Envio real de e-mail** na recuperação de senha | [`AuthService.java#L65`](../backend/src/main/java/com/jobflow/backend/service/AuthService.java) — retorna HTTP 200 sem enviar nada: `// opcional: mailService.send(...)` |
-| NI-02 | **Filtro de vagas por tecnologia** no feed | Parâmetro `technology` recebido em [`JobController`](../backend/src/main/java/com/jobflow/backend/controller/JobController.java#L32) mas **completamente ignorado** em [`JobService.getFeed()`](../backend/src/main/java/com/jobflow/backend/service/JobService.java#L31) |
-| NI-03 | **Actualização real do perfil** do utilizador | [`UserService.updateProfile()`](../backend/src/main/java/com/jobflow/backend/service/UserService.java#L39) retorna o perfil sem aplicar nenhuma alteração do `ProfileUpdateRequest` |
-| NI-04 | **Campos de nome/foto** na entidade `User` | [`User.java`](../backend/src/main/java/com/jobflow/backend/model/User.java) só tem `email`, `passwordHash`, `createdAt` — sem `name`, `avatarUrl`, `phone` |
-| NI-05 | **`ProfileResponse` com dados corretos** | [`UserService.toProfileResponse()`](../backend/src/main/java/com/jobflow/backend/service/UserService.java#L90) usa `email` no campo `name` e dois campos `null` sem conteúdo |
-| NI-06 | **Status de candidatura tipado** | `SavedJob.status` é `String` livre sem validação — aceita qualquer valor além de "saved", "applied", "archived" |
-| NI-07 | **Tecnologias na vaga importada da Codante** | `CodanteJobPayload` não tem campo `technologies` → `Job.technologies` fica sempre vazio após importação |
-| NI-08 | **Paginação de currículos** | [`ResumeService.listByUser()`](../backend/src/main/java/com/jobflow/backend/service/ResumeService.java#L33) retorna lista completa sem paginação |
-| NI-09 | **Testes de integração** (backend) | Nenhum teste `@SpringBootTest` com chamadas HTTP reais aos controllers foi identificado |
-| NI-10 | **Internacionalização (i18n)** | Mensagens de erro misturadas em PT e EN nos mesmos serviços |
+| # | Requisito Esperado | Estado no Código | Problema / Detalhe no Código |
+|---|--------------------|------------------|------------------------------|
+| NI-01 | **Envio real de e-mail** na recuperação de senha | ❌ Não Implementado | [`AuthService.java#L65`](../backend/src/main/java/com/jobflow/backend/service/AuthService.java) — retorna HTTP 200 sem enviar nada: `// opcional: mailService.send(...)` |
+| NI-02 | **Filtro de vagas por tecnologia** no feed | ❌ Não Implementado | Parâmetro `technology` recebido em [`JobController`](../backend/src/main/java/com/jobflow/backend/controller/JobController.java#L32) mas **completamente ignorado** em [`JobService.getFeed()`](../backend/src/main/java/com/jobflow/backend/service/JobService.java#L31) |
+| NI-03 | **Actualização real do perfil** do utilizador | ❌ Não Implementado | [`UserService.updateProfile()`](../backend/src/main/java/com/jobflow/backend/service/UserService.java#L39) retorna o perfil sem aplicar nenhuma alteração do `ProfileUpdateRequest` |
+| NI-04 | **Campos de nome/foto** na entidade `User` | ❌ Não Implementado | [`User.java`](../backend/src/main/java/com/jobflow/backend/model/User.java) só tem `email`, `passwordHash`, `createdAt` — sem `name`, `avatarUrl`, `phone` |
+| NI-05 | **`ProfileResponse` com dados corretos** | ❌ Não Implementado | [`UserService.toProfileResponse()`](../backend/src/main/java/com/jobflow/backend/service/UserService.java#L90) usa `email` no campo `name` e dois campos `null` sem conteúdo |
+| NI-06 | **Status de candidatura tipado** | ❌ Não Implementado | `SavedJob.status` é `String` livre sem validação — aceita qualquer valor além de "saved", "applied", "archived" |
+| NI-07 | **Tecnologias na vaga importada da Codante** | ❌ Não Implementado | `CodanteJobPayload` não tem campo `technologies` → `Job.technologies` fica sempre vazio após importação |
+| NI-08 | **Paginação de currículos** | ❌ Não Implementado | [`ResumeService.listByUser()`](../backend/src/main/java/com/jobflow/backend/service/ResumeService.java#L33) retorna lista completa sem paginação |
+| NI-09 | **Testes de integração** (backend) |  **Implementado** | Identificados testes `@SpringBootTest` com chamadas HTTP reais via MockMvc e verificação de fluxo completo nos arquivos [`AuthApiIntegrationTest.java`](../backend/src/test/java/com/jobflow/backend/AuthApiIntegrationTest.java), [`SecurityPentestIntegrationTest.java`](../backend/src/test/java/com/jobflow/backend/SecurityPentestIntegrationTest.java) e [`SmokeApiTest.java`](../backend/src/test/java/com/jobflow/backend/SmokeApiTest.java). |
+| NI-10 | **Internacionalização (i18n)** | ❌ Não Implementado | Mensagens de erro misturadas em PT e EN nos mesmos serviços |
 
 ---
 
@@ -487,14 +488,32 @@ A solução standard é usar uma coluna JSON nativa do PostgreSQL (`@Column(colu
 
 ### 🔵 Melhorias recomendadas
 
-| # | Problema | Categoria |
-|---|----------|-----------|
-| M1 | `catch (Exception ignored)` sem logging em `JobService` | Clean Code |
-| M2 | Currículos armazenados como BLOB no banco — deveria ser storage externo | Arquitetura |
-| M3 | `StringListConverter` com delimitador frágil — deveria ser JSON nativo | Arquitetura |
-| M4 | Strategy Pattern ausente no cálculo de feedback de match | Design Patterns |
-| M5 | Signal/Observable ausente para utilizador actual no frontend | Design Patterns |
-| M6 | Sem testes de integração no backend | Qualidade |
+| # | Problema | Categoria | Estado |
+|---|----------|-----------|--------|
+| M1 | `catch (Exception ignored)` sem logging em `JobService` | Clean Code | Em aberto |
+| M2 | Currículos armazenados como BLOB no banco — deveria ser storage externo | Arquitetura | Em aberto |
+| M3 | `StringListConverter` com delimitador frágil — deveria ser JSON nativo | Arquitetura | Em aberto |
+| M4 | Strategy Pattern ausente no cálculo de feedback de match | Design Patterns | Em aberto |
+| M5 | Signal/Observable ausente para utilizador actual no frontend | Design Patterns | Em aberto |
+| M6 | Sem testes de integração no backend | Qualidade |  **Resolvido** (Implementado em `AuthApiIntegrationTest`, etc.) |
+
+---
+
+## 8. Melhorias e Refatorações Implementadas
+
+Com base nas análises do projeto e revisões efetuadas, as seguintes melhorias e refatorações foram implementadas no código:
+
+### 🧪 Backend: Testes de Integração e Pentest (Resolução de NI-09 e M6)
+*   **Testes de Integração com `@SpringBootTest`**: Criação de testes de fluxo completo usando `MockMvc` para simular chamadas de API reais. Implementado nas classes [`AuthApiIntegrationTest.java`](../backend/src/test/java/com/jobflow/backend/AuthApiIntegrationTest.java) e [`SmokeApiTest.java`](../backend/src/test/java/com/jobflow/backend/SmokeApiTest.java).
+*   **Testes de Segurança e Pentest**: Implementação de verificações detalhadas em [`SecurityPentestIntegrationTest.java`](../backend/src/test/java/com/jobflow/backend/SecurityPentestIntegrationTest.java) para garantir a segurança da API contra CORS mal configurado, ataques de IDOR (tentativa de leitura de dados de outros utilizadores), vazamento de senhas hasheadas em respostas JSON e SQL Injection.
+
+### 🖥️ Frontend Angular: Refatoração, Padronização e Reatividade
+*   **Eliminação de Duplicação (DRY)**: Centralização da lógica de persistência e validação de token através do método privado `handleTokenResponse()` em [`auth.service.ts`](../jobflow/src/app/core/services/auth.service.ts), além de padronizar endpoints públicos no interceptor.
+*   **Centralização de Erros HTTP**: Uso do utilitário `readApiErrorMessage` para centralizar a leitura e exibição de mensagens de falhas da API em todos os serviços do Angular (`AuthService`, `ResumesService`, `SavedJobsService` e `UserSettingsService`).
+*   **Modernização do Angular (Signals e DOM)**:
+    *   Migração de campos mutáveis clássicos de mensagem e status para **Angular Signals** tipados (como `msgPassword` e `msgEmail`) para garantir reatividade e consistência no estado de definições e upload de currículos.
+    *   Substituição de busca manual de ID no DOM (`document.getElementById`) pelo decorator `@ViewChild('fileInput')` em [`curriculos.view.ts`](../jobflow/src/app/features/dashboard/views/curriculos.view.ts), preservando o ciclo de vida do Angular.
+    *   Modernização da configuração de injeção nos testes unitários e specs com `provideHttpClientTesting`.
 
 ---
 

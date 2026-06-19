@@ -29,20 +29,20 @@ export interface KanbanCard {
 })
 export class CandidaturasViewComponent implements OnDestroy {
   private readonly router = inject(Router);
-  private readonly savedJobs = inject(SavedJobsService);
+  private readonly savedJobsService = inject(SavedJobsService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
   readonly dragOverStatus = signal<KanbanStatus | null>(null);
 
   readonly saved = computed<KanbanCard[]>(() =>
-    this.savedJobs.savedJobs().filter((i) => i.status === 'saved').map(toKanbanCard),
+    this.savedJobsService.savedJobs().filter((item) => item.status === 'saved').map(toKanbanCard),
   );
   readonly applied = computed<KanbanCard[]>(() =>
-    this.savedJobs.savedJobs().filter((i) => i.status === 'applied').map(toKanbanCard),
+    this.savedJobsService.savedJobs().filter((item) => item.status === 'applied').map(toKanbanCard),
   );
   readonly offer = computed<KanbanCard[]>(() =>
-    this.savedJobs.savedJobs().filter((i) => i.status === 'offer').map(toKanbanCard),
+    this.savedJobsService.savedJobs().filter((item) => item.status === 'offer').map(toKanbanCard),
   );
 
   constructor() {
@@ -81,10 +81,10 @@ export class CandidaturasViewComponent implements OnDestroy {
     this.dragOverStatus.set(null);
     event.preventDefault();
     try {
-      const raw = event.dataTransfer?.getData('application/json');
-      if (!raw) return;
-      const { id } = JSON.parse(raw) as { id: string };
-      this.savedJobs.updateStatus(id, newStatus);
+      const dragPayloadJson = event.dataTransfer?.getData('application/json');
+      if (!dragPayloadJson) return;
+      const { id } = JSON.parse(dragPayloadJson) as { id: string };
+      this.savedJobsService.updateStatus(id, newStatus);
     } catch {
       // ignore
     }
@@ -93,7 +93,7 @@ export class CandidaturasViewComponent implements OnDestroy {
   cancelCard(event: Event, card: KanbanCard): void {
     event.stopPropagation();
     event.preventDefault();
-    this.savedJobs.removeJob(card.id);
+    this.savedJobsService.removeJob(card.id);
   }
 
   goToFeed(): void {

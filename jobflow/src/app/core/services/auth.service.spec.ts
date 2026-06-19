@@ -25,26 +25,26 @@ describe('AuthService', () => {
 
   it('login com token guarda auth_token no localStorage', async () => {
     const promise = firstValueFrom(service.login('dev@test.com', 'secret12'));
-    const req = httpMock.expectOne('/api/auth/login');
-    expect(req.request.body).toEqual({ email: 'dev@test.com', password: 'secret12' });
-    req.flush({ token: 'jwt-token' });
-    const res = await promise;
-    expect(res).toEqual({ success: true, token: 'jwt-token' });
+    const loginRequest = httpMock.expectOne('/api/auth/login');
+    expect(loginRequest.request.body).toEqual({ email: 'dev@test.com', password: 'secret12' });
+    loginRequest.flush({ token: 'jwt-token' });
+    const result = await promise;
+    expect(result).toEqual({ success: true, token: 'jwt-token' });
     expect(localStorage.getItem('auth_token')).toBe('jwt-token');
   });
 
   it('login sem token na resposta devolve erro', async () => {
     const promise = firstValueFrom(service.login('a@b.com', 'secret12'));
     httpMock.expectOne('/api/auth/login').flush({});
-    const res = await promise;
-    expect(res).toEqual({ success: false, error: 'Token não retornado pela API.' });
+    const result = await promise;
+    expect(result).toEqual({ success: false, error: 'Token não retornado pela API.' });
   });
 
   it('login 401 devolve mensagem de credenciais', async () => {
     const promise = firstValueFrom(service.login('a@b.com', 'wrongpwd'));
     httpMock.expectOne('/api/auth/login').flush({}, { status: 401, statusText: 'Unauthorized' });
-    const res = await promise;
-    expect(res).toEqual({ success: false, error: 'Email ou palavra-passe inválidos.' });
+    const result = await promise;
+    expect(result).toEqual({ success: false, error: 'Email ou palavra-passe inválidos.' });
   });
 
   it('requestPasswordReset sucesso', async () => {
@@ -58,8 +58,8 @@ describe('AuthService', () => {
       service.register({ email: 'n@b.com', password: 'secret12' }),
     );
     httpMock.expectOne('/api/auth/register').flush({ token: 'reg-token' });
-    const res = await promise;
-    expect(res).toEqual({ success: true, token: 'reg-token' });
+    const result = await promise;
+    expect(result).toEqual({ success: true, token: 'reg-token' });
     expect(localStorage.getItem('auth_token')).toBe('reg-token');
   });
 
@@ -68,8 +68,8 @@ describe('AuthService', () => {
       service.register({ email: 'x@b.com', password: 'secret12' }),
     );
     httpMock.expectOne('/api/auth/register').flush({}, { status: 409, statusText: 'Conflict' });
-    const res = await promise;
-    expect(res).toEqual({ success: false, error: 'Este e-mail já está registado.' });
+    const result = await promise;
+    expect(result).toEqual({ success: false, error: 'Este e-mail já está registado.' });
   });
 
   it('removeToken limpa localStorage', () => {

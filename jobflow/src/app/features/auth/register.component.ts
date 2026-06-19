@@ -20,10 +20,10 @@ import { createAuthCardEntrance } from './auth-card.animations';
   styleUrls: ['./login.component.scss'],
 })
 export class RegisterComponent implements OnDestroy {
-  private readonly auth = inject(AuthService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private ctx?: ReturnType<typeof createAuthCardEntrance>;
+  private entranceAnimation?: ReturnType<typeof createAuthCardEntrance>;
 
   readonly loading = signal(false);
   readonly message = signal<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -35,12 +35,12 @@ export class RegisterComponent implements OnDestroy {
 
   constructor() {
     afterNextRender(() => {
-      this.ctx = createAuthCardEntrance(this.host.nativeElement);
+      this.entranceAnimation = createAuthCardEntrance(this.host.nativeElement);
     });
   }
 
   ngOnDestroy(): void {
-    this.ctx?.revert();
+    this.entranceAnimation?.revert();
   }
 
   onSubmit(): void {
@@ -60,7 +60,7 @@ export class RegisterComponent implements OnDestroy {
     }
 
     this.loading.set(true);
-    this.auth
+    this.authService
       .register({
         name: this.name || undefined,
         email: this.email,

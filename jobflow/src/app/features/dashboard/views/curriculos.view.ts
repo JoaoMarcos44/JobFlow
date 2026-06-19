@@ -1,4 +1,4 @@
-import { Component, inject, ElementRef, afterNextRender, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, signal, ElementRef, ViewChild, afterNextRender, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ResumesService } from '../../../core/services/resumes.service';
@@ -12,18 +12,19 @@ import { mountDashboardView, viewRoot } from '../dashboard-view-host';
   styleUrls: ['./curriculos.view.scss'],
 })
 export class CurriculosViewComponent implements OnInit, OnDestroy {
-  private readonly resumes = inject(ResumesService);
+  @ViewChild('fileInput') private fileInputRef!: ElementRef<HTMLInputElement>;
+
+  private readonly resumesService = inject(ResumesService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
   selectedFile: File | null = null;
   selectedFileName = '';
-  message = '';
-  messageSuccess = false;
   saving = false;
+  readonly uploadMsg = signal<{ text: string; success: boolean } | null>(null);
   private replaceForId: string | null = null;
 
-  readonly resumeList = this.resumes.list;
+  readonly resumeList = this.resumesService.list;
 
   constructor() {
     afterNextRender(() => {
@@ -35,7 +36,7 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.resumes.reloadFromApi();
+    this.resumesService.reloadFromApi();
   }
 
   ngOnDestroy(): void {
@@ -47,53 +48,49 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
     const file = input.files?.[0];
     this.selectedFile = file ?? null;
     this.selectedFileName = file ? file.name : '';
-    this.message = '';
+    this.uploadMsg.set(null);
   }
 
   onSubmit(): void {
     if (!this.selectedFile) {
-      this.message = 'Selecione um ficheiro PDF ou DOCX.';
-      this.messageSuccess = false;
+      this.uploadMsg.set({ text: 'Selecione um ficheiro PDF ou DOCX.', success: false });
       return;
     }
     this.saving = true;
-    this.message = '';
-    this.resumes.add(this.selectedFile).subscribe((r) => {
+    this.uploadMsg.set(null);
+    this.resumesService.add(this.selectedFile).subscribe((result) => {
       this.saving = false;
-      if (r.success) {
-        this.message = 'Currículo guardado com sucesso.';
-        this.messageSuccess = true;
-      } else {
-        this.message = r.error;
-        this.messageSuccess = false;
-      }
+      this.uploadMsg.set(
+        result.success
+          ? { text: 'Currículo guardado com sucesso.', success: true }
+          : { text: result.error, success: false },
+      );
       this.selectedFile = null;
       this.selectedFileName = '';
-      const input = document.getElementById('resume-file') as HTMLInputElement;
-      if (input) input.value = '';
+      if (this.fileInputRef?.nativeElement) this.fileInputRef.nativeElement.value = '';
     });
   }
 
   downloadResume(id: string): void {
-    void this.resumes.download(id);
+    void this.resumesService.download(id);
   }
 
   canDownload(id: string): boolean {
-    return this.resumes.hasDownload(id);
+    return this.resumesService.hasDownload(id);
   }
 
   removeResume(event: Event, id: string): void {
     event.stopPropagation();
     event.preventDefault();
-    this.resumes.remove(id);
+    this.resumesService.remove(id);
   }
 
   openReplace(id: string): void {
     this.replaceForId = id;
-    const el = document.getElementById('resume-replace-file') as HTMLInputElement;
-    if (el) {
-      el.value = '';
-      el.click();
+    const fileInput = document.getElementById('resume-replace-file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+      fileInput.click();
     }
   }
 
@@ -104,16 +101,14 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
     this.replaceForId = null;
     if (!file || !id) return;
     this.saving = true;
-    this.message = '';
-    this.resumes.replace(id, file).subscribe((r) => {
+    this.uploadMsg.set(null);
+    this.resumesService.replace(id, file).subscribe((result) => {
       this.saving = false;
-      if (r.success) {
-        this.message = 'Currículo atualizado.';
-        this.messageSuccess = true;
-      } else {
-        this.message = r.error;
-        this.messageSuccess = false;
-      }
+      this.uploadMsg.set(
+        result.success
+          ? { text: 'Currículo atualizado.', success: true }
+          : { text: result.error, success: false },
+      );
       input.value = '';
     });
   }

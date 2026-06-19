@@ -1,8 +1,9 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
+import { readApiErrorMessage } from '../http/api-error';
 
-const API = '/api/resumes';
+const RESUMES_API = '/api/resumes';
 
 export interface ResumeEntry {
   id: string;
@@ -27,8 +28,8 @@ export class ResumesService {
   constructor(private http: HttpClient) {}
 
   reloadFromApi(): void {
-    this.http.get<ResumeSummaryDto[]>(API).subscribe({
-      next: (rows) => this.items.set(rows.map(toResumeEntry)),
+    this.http.get<ResumeSummaryDto[]>(RESUMES_API).subscribe({
+      next: (summaries) => this.items.set(summaries.map(toResumeEntry)),
       error: () => this.items.set([]),
     });
   }
@@ -36,48 +37,58 @@ export class ResumesService {
   add(file: File): Observable<AddResumeResult> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<ResumeSummaryDto>(API, formData).pipe(
-      tap((row) => {
-        const entry = toResumeEntry(row);
-        this.items.update((current) => [entry, ...current.filter((x) => x.id !== entry.id)]);
+    return this.http.post<ResumeSummaryDto>(RESUMES_API, formData).pipe(
+      tap((summary) => {
+        const entry = toResumeEntry(summary);
+        this.items.update((current) => [entry, ...current.filter((item) => item.id !== entry.id)]);
       }),
       map(() => ({ success: true as const })),
-      catchError((err) => of({ success: false as const, error: uploadErrorMessage(err) })),
+      catchError((error) =>
+        of({
+          success: false as const,
+          error: readApiErrorMessage(
+            error,
+            error?.status === 413
+              ? 'Ficheiro demasiado grande (máx. 10 MB).'
+              : `Não foi possível enviar (${error?.status ?? 'rede'}).`,
+          ),
+        }),
+      ),
     );
   }
 
   replace(id: string, file: File): Observable<AddResumeResult> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.put<ResumeSummaryDto>(`${API}/${id}`, formData).pipe(
-      tap((row) => {
-        const entry = toResumeEntry(row);
-        this.items.update((current) => current.map((e) => (e.id === id ? entry : e)));
+    return this.http.put<ResumeSummaryDto>(`${RESUMES_API}/${id}`, formData).pipe(
+      tap((summary) => {
+        const entry = toResumeEntry(summary);
+        this.items.update((current) => current.map((item) => (item.id === id ? entry : item)));
       }),
       map(() => ({ success: true as const })),
-      catchError((err) =>
+      catchError((error) =>
         of({
           success: false as const,
-          error: err?.error?.message || err?.error?.error || `Erro ao atualizar (${err?.status ?? 'rede'}).`,
+          error: readApiErrorMessage(error, `Erro ao atualizar (${error?.status ?? 'rede'}).`),
         }),
       ),
     );
   }
 
   download(id: string): void {
-    this.http.get(`${API}/${id}`, { responseType: 'blob', observe: 'response' }).subscribe({
-      next: (res) => {
-        const blob = res.body;
+    this.http.get(`${RESUMES_API}/${id}`, { responseType: 'blob', observe: 'response' }).subscribe({
+      next: (response) => {
+        const blob = response.body;
         if (!blob) return;
-        const cd = res.headers.get('Content-Disposition');
-        const m = cd?.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)/i);
-        const name = m?.[1] ? decodeURIComponent(m[1]) : 'curriculo';
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name;
-        a.click();
-        URL.revokeObjectURL(url);
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const match = contentDisposition?.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)/i);
+        const fileName = match?.[1] ? decodeURIComponent(match[1]) : 'curriculo';
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(objectUrl);
       },
     });
   }
@@ -87,30 +98,17 @@ export class ResumesService {
   }
 
   remove(id: string): void {
-    this.http.delete<void>(`${API}/${id}`).subscribe({
-      next: () => this.items.update((current) => current.filter((e) => e.id !== id)),
+    this.http.delete<void>(`${RESUMES_API}/${id}`).subscribe({
+      next: () => this.items.update((current) => current.filter((item) => item.id !== id)),
       error: () => this.reloadFromApi(),
     });
   }
 }
 
-function toResumeEntry(row: ResumeSummaryDto): ResumeEntry {
+function toResumeEntry(summary: ResumeSummaryDto): ResumeEntry {
   return {
-    id: row.id,
-    fileName: row.fileName,
-    uploadedAt: row.createdAt,
+    id: summary.id,
+    fileName: summary.fileName,
+    uploadedAt: summary.createdAt,
   };
-}
-
-function uploadErrorMessage(err: {
-  error?: { message?: string; error?: string };
-  status?: number;
-}): string {
-  return (
-    err?.error?.message ||
-    err?.error?.error ||
-    (err?.status === 413
-      ? 'Ficheiro demasiado grande (máx. 10 MB).'
-      : `Não foi possível enviar (${err?.status ?? 'rede'}).`)
-  );
 }
