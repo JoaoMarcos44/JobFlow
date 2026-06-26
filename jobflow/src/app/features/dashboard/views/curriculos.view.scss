@@ -215,6 +215,153 @@ $status-offer: #10b981;
   color: #22d3ee;
 }
 
+/* ── IA offline ─────────────────────────────────────── */
+
+.btn-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(167, 139, 250, 0.2);
+    border-color: rgba(167, 139, 250, 0.6);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ai-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: ai-spin 0.75s linear infinite;
+}
+
+@keyframes ai-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ai-panel {
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+
+.ai-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ai-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ai-close {
+  background: none;
+  border: none;
+  color: $text-muted;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+
+  &:hover { color: $text-main; }
+}
+
+.ai-profile {
+  font-size: 13px;
+  color: $text-muted;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.ai-section {
+  margin-top: 10px;
+}
+
+.ai-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+
+.ai-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+
+.ai-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    font-size: 13px;
+    color: $text-muted;
+    padding: 3px 0 3px 14px;
+    position: relative;
+    line-height: 1.4;
+
+    &::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: #a78bfa;
+    }
+  }
+}
+
+.ai-error {
+  font-size: 13px;
+  color: #f87171;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 8px;
+}
+
+/* ── Tema claro ─────────────────────────────────────── */
+
 :host-context(html.theme-light) {
   .board-header h2 {
     color: #0f172a;

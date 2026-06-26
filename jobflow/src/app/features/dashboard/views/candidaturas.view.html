@@ -25,11 +25,73 @@
             <h3 class="card-title">{{ card.title }}</h3>
             <div class="card-footer">
               <span class="card-date">Vaga</span>
-              @if (card.matchScore != null) {
-                <span class="match-score">{{ card.matchScore }}% Match</span>
-              }
+              <div class="card-footer-right">
+                @if (card.matchScore != null) {
+                  <span class="match-score">{{ card.matchScore }}% Match</span>
+                }
+                <button
+                  type="button"
+                  class="btn-ai"
+                  draggable="false"
+                  (click)="analyzeJob(card)"
+                  [disabled]="analyzingJobId() !== null"
+                  [title]="analyzingJobId() === card.id ? 'A analisar...' : 'Analisar compatibilidade com IA'"
+                >
+                  @if (analyzingJobId() === card.id) {
+                    <span class="ai-spinner"></span>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="19" cy="5" r="3"/></svg>
+                  }
+                  IA
+                </button>
+              </div>
             </div>
           </div>
+          @if (aiJobResultForId() === card.id && aiJobResult()) {
+            <div class="ai-panel">
+              <div class="ai-panel-header">
+                <span class="ai-badge">IA offline · {{ aiJobResult()!.pontuacao }}% compatível</span>
+                <button type="button" class="ai-close" (click)="closeAiJobResult()" aria-label="Fechar">✕</button>
+              </div>
+              <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
+              <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
+                {{ aiJobResult()!.recomendacao }}
+              </div>
+              @if (aiJobResult()!.skillsFaltantes.length > 0) {
+                <div class="ai-section">
+                  <h4 class="ai-section-title">Skills em falta</h4>
+                  <div class="ai-tags">
+                    @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
+                      <span class="ai-tag">{{ skill }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (aiJobResult()!.planoEstudo.length > 0) {
+                <div class="ai-section">
+                  <h4 class="ai-section-title">Plano de estudo</h4>
+                  <ul class="ai-list">
+                    @for (item of aiJobResult()!.planoEstudo; track item) {
+                      <li>{{ item }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+              @if (aiJobResult()!.bulletsCoverLetter.length > 0) {
+                <div class="ai-section">
+                  <h4 class="ai-section-title">Cover letter</h4>
+                  <ul class="ai-list">
+                    @for (bullet of aiJobResult()!.bulletsCoverLetter; track bullet) {
+                      <li>{{ bullet }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+        }
+        @if (aiJobError() && analyzingJobId() === null) {
+          <p class="ai-error">{{ aiJobError() }}</p>
         }
       </div>
     </div>
@@ -55,11 +117,60 @@
             <h3 class="card-title">{{ card.title }}</h3>
             <div class="card-footer">
               <span class="card-date">Entrevista</span>
-              @if (card.matchScore != null) {
-                <span class="match-score">{{ card.matchScore }}% Match</span>
-              }
+              <div class="card-footer-right">
+                @if (card.matchScore != null) {
+                  <span class="match-score">{{ card.matchScore }}% Match</span>
+                }
+                <button
+                  type="button"
+                  class="btn-ai"
+                  draggable="false"
+                  (click)="analyzeJob(card)"
+                  [disabled]="analyzingJobId() !== null"
+                  [title]="analyzingJobId() === card.id ? 'A analisar...' : 'Analisar compatibilidade com IA'"
+                >
+                  @if (analyzingJobId() === card.id) {
+                    <span class="ai-spinner"></span>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="19" cy="5" r="3"/></svg>
+                  }
+                  IA
+                </button>
+              </div>
             </div>
           </div>
+          @if (aiJobResultForId() === card.id && aiJobResult()) {
+            <div class="ai-panel">
+              <div class="ai-panel-header">
+                <span class="ai-badge">IA offline · {{ aiJobResult()!.pontuacao }}% compatível</span>
+                <button type="button" class="ai-close" (click)="closeAiJobResult()" aria-label="Fechar">✕</button>
+              </div>
+              <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
+              <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
+                {{ aiJobResult()!.recomendacao }}
+              </div>
+              @if (aiJobResult()!.skillsFaltantes.length > 0) {
+                <div class="ai-section">
+                  <h4 class="ai-section-title">Skills em falta</h4>
+                  <div class="ai-tags">
+                    @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
+                      <span class="ai-tag">{{ skill }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (aiJobResult()!.planoEstudo.length > 0) {
+                <div class="ai-section">
+                  <h4 class="ai-section-title">Plano de estudo</h4>
+                  <ul class="ai-list">
+                    @for (item of aiJobResult()!.planoEstudo; track item) {
+                      <li>{{ item }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
         }
       </div>
     </div>
@@ -85,11 +196,50 @@
             <h3 class="card-title">{{ card.title }}</h3>
             <div class="card-footer">
               <span class="card-date">Proposta</span>
-              @if (card.matchScore != null) {
-                <span class="match-score">{{ card.matchScore }}% Match</span>
-              }
+              <div class="card-footer-right">
+                @if (card.matchScore != null) {
+                  <span class="match-score">{{ card.matchScore }}% Match</span>
+                }
+                <button
+                  type="button"
+                  class="btn-ai"
+                  draggable="false"
+                  (click)="analyzeJob(card)"
+                  [disabled]="analyzingJobId() !== null"
+                  [title]="analyzingJobId() === card.id ? 'A analisar...' : 'Analisar compatibilidade com IA'"
+                >
+                  @if (analyzingJobId() === card.id) {
+                    <span class="ai-spinner"></span>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/><circle cx="19" cy="5" r="3"/></svg>
+                  }
+                  IA
+                </button>
+              </div>
             </div>
           </div>
+          @if (aiJobResultForId() === card.id && aiJobResult()) {
+            <div class="ai-panel">
+              <div class="ai-panel-header">
+                <span class="ai-badge">IA offline · {{ aiJobResult()!.pontuacao }}% compatível</span>
+                <button type="button" class="ai-close" (click)="closeAiJobResult()" aria-label="Fechar">✕</button>
+              </div>
+              <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
+              <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
+                {{ aiJobResult()!.recomendacao }}
+              </div>
+              @if (aiJobResult()!.skillsFaltantes.length > 0) {
+                <div class="ai-section">
+                  <h4 class="ai-section-title">Skills em falta</h4>
+                  <div class="ai-tags">
+                    @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
+                      <span class="ai-tag">{{ skill }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
         }
       </div>
     </div>

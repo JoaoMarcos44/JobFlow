@@ -26,6 +26,13 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Conflict"));
     }
 
+    @ExceptionHandler(AiUnavailableException.class)
+    public ResponseEntity<Map<String, String>> handleAiUnavailable(AiUnavailableException e) {
+        log.info("IA offline indisponível: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("error", e.getMessage()));
+    }
+
     /**
      * Do not echo internal messages (e.g. user enumeration, validation internals) to clients.
      */

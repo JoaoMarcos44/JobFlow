@@ -2,6 +2,7 @@ import { Component, inject, signal, ElementRef, ViewChild, afterNextRender, OnDe
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ResumesService } from '../../../core/services/resumes.service';
+import { AiService, AiResumeAnalysis } from '../../../core/services/ai.service';
 import { mountDashboardView, viewRoot } from '../dashboard-view-host';
 
 @Component({
@@ -15,6 +16,7 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') private fileInputRef!: ElementRef<HTMLInputElement>;
 
   private readonly resumesService = inject(ResumesService);
+  private readonly aiService = inject(AiService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private entranceAnimation?: ReturnType<typeof mountDashboardView>;
 
@@ -23,6 +25,11 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
   saving = false;
   readonly uploadMsg = signal<{ text: string; success: boolean } | null>(null);
   private replaceForId: string | null = null;
+
+  readonly extractingFor = signal<string | null>(null);
+  readonly aiResult = signal<AiResumeAnalysis | null>(null);
+  readonly aiResultFor = signal<string | null>(null);
+  readonly aiError = signal<string | null>(null);
 
   readonly resumeList = this.resumesService.list;
 
@@ -123,5 +130,27 @@ export class CurriculosViewComponent implements OnInit, OnDestroy {
     } catch {
       return iso;
     }
+  }
+
+  extractSkills(resumeId: string): void {
+    this.extractingFor.set(resumeId);
+    this.aiResult.set(null);
+    this.aiResultFor.set(null);
+    this.aiError.set(null);
+    this.aiService.extractSkillsFromResume(resumeId).subscribe((result) => {
+      this.extractingFor.set(null);
+      if ('data' in result) {
+        this.aiResult.set(result.data);
+        this.aiResultFor.set(resumeId);
+      } else {
+        this.aiError.set(result.error);
+      }
+    });
+  }
+
+  closeAiResult(): void {
+    this.aiResult.set(null);
+    this.aiResultFor.set(null);
+    this.aiError.set(null);
   }
 }
