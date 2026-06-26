@@ -24,15 +24,18 @@ public class SavedJobService {
     private final SavedJobRepository savedJobRepository;
     private final JobService jobService;
     private final MatchService matchService;
+    private final AiScoreService aiScoreService;
 
     public SavedJobService(
             SavedJobRepository savedJobRepository,
             JobService jobService,
-            MatchService matchService
+            MatchService matchService,
+            AiScoreService aiScoreService
     ) {
         this.savedJobRepository = savedJobRepository;
         this.jobService = jobService;
         this.matchService = matchService;
+        this.aiScoreService = aiScoreService;
     }
 
     @Transactional(readOnly = true)
@@ -64,6 +67,7 @@ public class SavedJobService {
             savedJob.setStatus(request.status().trim());
         }
         savedJobRepository.save(savedJob);
+        aiScoreService.updateScoreAsync(savedJob.getId(), user, job);
         return toSavedJobResponse(savedJob);
     }
 
