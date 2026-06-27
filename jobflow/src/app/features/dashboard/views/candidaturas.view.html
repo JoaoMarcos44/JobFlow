@@ -53,39 +53,122 @@
                 <span class="ai-badge">IA offline · {{ aiJobResult()!.pontuacao }}% compatível</span>
                 <button type="button" class="ai-close" (click)="closeAiJobResult()" aria-label="Fechar">✕</button>
               </div>
-              <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
-              <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
-                {{ aiJobResult()!.recomendacao }}
+
+              <!-- Tabs Navigation -->
+              <div class="ai-tabs-nav">
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'match'" (click)="switchTab('match', card)">Match</button>
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'interview'" (click)="switchTab('interview', card)">Entrevista</button>
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'cover-letter'" (click)="switchTab('cover-letter', card)">Carta</button>
               </div>
-              @if (aiJobResult()!.skillsFaltantes.length > 0) {
-                <div class="ai-section">
-                  <h4 class="ai-section-title">Skills em falta</h4>
-                  <div class="ai-tags">
-                    @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
-                      <span class="ai-tag">{{ skill }}</span>
-                    }
+
+              <!-- Tab Contents: Match -->
+              @if (activeAiTab() === 'match') {
+                <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
+                <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
+                  {{ aiJobResult()!.recomendacao }}
+                </div>
+                @if (aiJobResult()!.skillsFaltantes.length > 0) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Skills em falta</h4>
+                    <div class="ai-tags">
+                      @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
+                        <span class="ai-tag">{{ skill }}</span>
+                      }
+                    </div>
                   </div>
-                </div>
+                }
+                @if (aiJobResult()!.planoEstudo.length > 0) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Plano de estudo</h4>
+                    <ul class="ai-list">
+                      @for (item of aiJobResult()!.planoEstudo; track item) {
+                        <li>{{ item }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+                @if (aiJobResult()!.bulletsCoverLetter.length > 0) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Cover letter</h4>
+                    <ul class="ai-list">
+                      @for (bullet of aiJobResult()!.bulletsCoverLetter; track bullet) {
+                        <li>{{ bullet }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
               }
-              @if (aiJobResult()!.planoEstudo.length > 0) {
-                <div class="ai-section">
-                  <h4 class="ai-section-title">Plano de estudo</h4>
-                  <ul class="ai-list">
-                    @for (item of aiJobResult()!.planoEstudo; track item) {
-                      <li>{{ item }}</li>
-                    }
-                  </ul>
-                </div>
+
+              <!-- Tab Contents: Interview -->
+              @if (activeAiTab() === 'interview') {
+                @if (loadingInterview()) {
+                  <div class="ai-loading"><span class="ai-spinner"></span> A preparar entrevista...</div>
+                } @else if (interviewError()) {
+                  <p class="ai-error">{{ interviewError() }}</p>
+                } @else if (aiInterviewResult()) {
+                  <p class="ai-resumo">{{ aiInterviewResult()!.resumoVaga }}</p>
+
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Perguntas Comuns</h4>
+                    <ul class="ai-list">
+                      @for (p of aiInterviewResult()!.perguntasTecnicas; track p) {
+                        <li><strong>Técnica:</strong> {{ p }}</li>
+                      }
+                      @for (p of aiInterviewResult()!.perguntasComportamentais; track p) {
+                        <li><strong>Comportamental:</strong> {{ p }}</li>
+                      }
+                    </ul>
+                  </div>
+
+                  @if (aiInterviewResult()!.respostasModelo.length > 0) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Sugestões de Respostas</h4>
+                      @for (rm of aiInterviewResult()!.respostasModelo; track rm.pergunta) {
+                        <div class="ai-qa">
+                          <div class="ai-q">Q: {{ rm.pergunta }}</div>
+                          <div class="ai-a">{{ rm.sugestaoResposta }}</div>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  @if (aiInterviewResult()!.dicasPreparacao.length > 0) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Dicas de Preparação</h4>
+                      <ul class="ai-list">
+                        @for (dica of aiInterviewResult()!.dicasPreparacao; track dica) {
+                          <li>{{ dica }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                }
               }
-              @if (aiJobResult()!.bulletsCoverLetter.length > 0) {
-                <div class="ai-section">
-                  <h4 class="ai-section-title">Cover letter</h4>
-                  <ul class="ai-list">
-                    @for (bullet of aiJobResult()!.bulletsCoverLetter; track bullet) {
-                      <li>{{ bullet }}</li>
-                    }
-                  </ul>
-                </div>
+
+              <!-- Tab Contents: Cover Letter -->
+              @if (activeAiTab() === 'cover-letter') {
+                @if (loadingCoverLetter()) {
+                  <div class="ai-loading"><span class="ai-spinner"></span> A redigir carta...</div>
+                } @else if (coverLetterError()) {
+                  <p class="ai-error">{{ coverLetterError() }}</p>
+                } @else if (aiCoverLetterResult()) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Assunto sugerido</h4>
+                    <p class="ai-subject">{{ aiCoverLetterResult()!.assunto }}</p>
+                  </div>
+
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Carta de Apresentação</h4>
+                    <div class="ai-letter-body">{{ aiCoverLetterResult()!.cartaCompleta }}</div>
+                  </div>
+
+                  @if (aiCoverLetterResult()!.dicaPersonalizacao) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Dica extra</h4>
+                      <p class="ai-dica">{{ aiCoverLetterResult()!.dicaPersonalizacao }}</p>
+                    </div>
+                  }
+                }
               }
             </div>
           }
@@ -145,29 +228,112 @@
                 <span class="ai-badge">IA offline · {{ aiJobResult()!.pontuacao }}% compatível</span>
                 <button type="button" class="ai-close" (click)="closeAiJobResult()" aria-label="Fechar">✕</button>
               </div>
-              <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
-              <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
-                {{ aiJobResult()!.recomendacao }}
+
+              <!-- Tabs Navigation -->
+              <div class="ai-tabs-nav">
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'match'" (click)="switchTab('match', card)">Match</button>
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'interview'" (click)="switchTab('interview', card)">Entrevista</button>
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'cover-letter'" (click)="switchTab('cover-letter', card)">Carta</button>
               </div>
-              @if (aiJobResult()!.skillsFaltantes.length > 0) {
-                <div class="ai-section">
-                  <h4 class="ai-section-title">Skills em falta</h4>
-                  <div class="ai-tags">
-                    @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
-                      <span class="ai-tag">{{ skill }}</span>
-                    }
+
+              <!-- Tab Contents: Match -->
+              @if (activeAiTab() === 'match') {
+                <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
+                <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
+                  {{ aiJobResult()!.recomendacao }}
+                </div>
+                @if (aiJobResult()!.skillsFaltantes.length > 0) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Skills em falta</h4>
+                    <div class="ai-tags">
+                      @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
+                        <span class="ai-tag">{{ skill }}</span>
+                      }
+                    </div>
                   </div>
-                </div>
+                }
+                @if (aiJobResult()!.planoEstudo.length > 0) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Plano de estudo</h4>
+                    <ul class="ai-list">
+                      @for (item of aiJobResult()!.planoEstudo; track item) {
+                        <li>{{ item }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
               }
-              @if (aiJobResult()!.planoEstudo.length > 0) {
-                <div class="ai-section">
-                  <h4 class="ai-section-title">Plano de estudo</h4>
-                  <ul class="ai-list">
-                    @for (item of aiJobResult()!.planoEstudo; track item) {
-                      <li>{{ item }}</li>
-                    }
-                  </ul>
-                </div>
+
+              <!-- Tab Contents: Interview -->
+              @if (activeAiTab() === 'interview') {
+                @if (loadingInterview()) {
+                  <div class="ai-loading"><span class="ai-spinner"></span> A preparar entrevista...</div>
+                } @else if (interviewError()) {
+                  <p class="ai-error">{{ interviewError() }}</p>
+                } @else if (aiInterviewResult()) {
+                  <p class="ai-resumo">{{ aiInterviewResult()!.resumoVaga }}</p>
+
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Perguntas Comuns</h4>
+                    <ul class="ai-list">
+                      @for (p of aiInterviewResult()!.perguntasTecnicas; track p) {
+                        <li><strong>Técnica:</strong> {{ p }}</li>
+                      }
+                      @for (p of aiInterviewResult()!.perguntasComportamentais; track p) {
+                        <li><strong>Comportamental:</strong> {{ p }}</li>
+                      }
+                    </ul>
+                  </div>
+
+                  @if (aiInterviewResult()!.respostasModelo.length > 0) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Sugestões de Respostas</h4>
+                      @for (rm of aiInterviewResult()!.respostasModelo; track rm.pergunta) {
+                        <div class="ai-qa">
+                          <div class="ai-q">Q: {{ rm.pergunta }}</div>
+                          <div class="ai-a">{{ rm.sugestaoResposta }}</div>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  @if (aiInterviewResult()!.dicasPreparacao.length > 0) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Dicas de Preparação</h4>
+                      <ul class="ai-list">
+                        @for (dica of aiInterviewResult()!.dicasPreparacao; track dica) {
+                          <li>{{ dica }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                }
+              }
+
+              <!-- Tab Contents: Cover Letter -->
+              @if (activeAiTab() === 'cover-letter') {
+                @if (loadingCoverLetter()) {
+                  <div class="ai-loading"><span class="ai-spinner"></span> A redigir carta...</div>
+                } @else if (coverLetterError()) {
+                  <p class="ai-error">{{ coverLetterError() }}</p>
+                } @else if (aiCoverLetterResult()) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Assunto sugerido</h4>
+                    <p class="ai-subject">{{ aiCoverLetterResult()!.assunto }}</p>
+                  </div>
+
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Carta de Apresentação</h4>
+                    <div class="ai-letter-body">{{ aiCoverLetterResult()!.cartaCompleta }}</div>
+                  </div>
+
+                  @if (aiCoverLetterResult()!.dicaPersonalizacao) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Dica extra</h4>
+                      <p class="ai-dica">{{ aiCoverLetterResult()!.dicaPersonalizacao }}</p>
+                    </div>
+                  }
+                }
               }
             </div>
           }
@@ -224,19 +390,102 @@
                 <span class="ai-badge">IA offline · {{ aiJobResult()!.pontuacao }}% compatível</span>
                 <button type="button" class="ai-close" (click)="closeAiJobResult()" aria-label="Fechar">✕</button>
               </div>
-              <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
-              <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
-                {{ aiJobResult()!.recomendacao }}
+
+              <!-- Tabs Navigation -->
+              <div class="ai-tabs-nav">
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'match'" (click)="switchTab('match', card)">Match</button>
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'interview'" (click)="switchTab('interview', card)">Entrevista</button>
+                <button type="button" class="tab-btn" [class.active]="activeAiTab() === 'cover-letter'" (click)="switchTab('cover-letter', card)">Carta</button>
               </div>
-              @if (aiJobResult()!.skillsFaltantes.length > 0) {
-                <div class="ai-section">
-                  <h4 class="ai-section-title">Skills em falta</h4>
-                  <div class="ai-tags">
-                    @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
-                      <span class="ai-tag">{{ skill }}</span>
-                    }
-                  </div>
+
+              <!-- Tab Contents: Match -->
+              @if (activeAiTab() === 'match') {
+                <p class="ai-resumo">{{ aiJobResult()!.resumo }}</p>
+                <div class="ai-recomendacao" [class.rec-go]="aiJobResult()!.recomendacao === 'Candidatar-se agora'">
+                  {{ aiJobResult()!.recomendacao }}
                 </div>
+                @if (aiJobResult()!.skillsFaltantes.length > 0) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Skills em falta</h4>
+                    <div class="ai-tags">
+                      @for (skill of aiJobResult()!.skillsFaltantes; track skill) {
+                        <span class="ai-tag">{{ skill }}</span>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+
+              <!-- Tab Contents: Interview -->
+              @if (activeAiTab() === 'interview') {
+                @if (loadingInterview()) {
+                  <div class="ai-loading"><span class="ai-spinner"></span> A preparar entrevista...</div>
+                } @else if (interviewError()) {
+                  <p class="ai-error">{{ interviewError() }}</p>
+                } @else if (aiInterviewResult()) {
+                  <p class="ai-resumo">{{ aiInterviewResult()!.resumoVaga }}</p>
+
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Perguntas Comuns</h4>
+                    <ul class="ai-list">
+                      @for (p of aiInterviewResult()!.perguntasTecnicas; track p) {
+                        <li><strong>Técnica:</strong> {{ p }}</li>
+                      }
+                      @for (p of aiInterviewResult()!.perguntasComportamentais; track p) {
+                        <li><strong>Comportamental:</strong> {{ p }}</li>
+                      }
+                    </ul>
+                  </div>
+
+                  @if (aiInterviewResult()!.respostasModelo.length > 0) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Sugestões de Respostas</h4>
+                      @for (rm of aiInterviewResult()!.respostasModelo; track rm.pergunta) {
+                        <div class="ai-qa">
+                          <div class="ai-q">Q: {{ rm.pergunta }}</div>
+                          <div class="ai-a">{{ rm.sugestaoResposta }}</div>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  @if (aiInterviewResult()!.dicasPreparacao.length > 0) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Dicas de Preparação</h4>
+                      <ul class="ai-list">
+                        @for (dica of aiInterviewResult()!.dicasPreparacao; track dica) {
+                          <li>{{ dica }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                }
+              }
+
+              <!-- Tab Contents: Cover Letter -->
+              @if (activeAiTab() === 'cover-letter') {
+                @if (loadingCoverLetter()) {
+                  <div class="ai-loading"><span class="ai-spinner"></span> A redigir carta...</div>
+                } @else if (coverLetterError()) {
+                  <p class="ai-error">{{ coverLetterError() }}</p>
+                } @else if (aiCoverLetterResult()) {
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Assunto sugerido</h4>
+                    <p class="ai-subject">{{ aiCoverLetterResult()!.assunto }}</p>
+                  </div>
+
+                  <div class="ai-section">
+                    <h4 class="ai-section-title">Carta de Apresentação</h4>
+                    <div class="ai-letter-body">{{ aiCoverLetterResult()!.cartaCompleta }}</div>
+                  </div>
+
+                  @if (aiCoverLetterResult()!.dicaPersonalizacao) {
+                    <div class="ai-section">
+                      <h4 class="ai-section-title">Dica extra</h4>
+                      <p class="ai-dica">{{ aiCoverLetterResult()!.dicaPersonalizacao }}</p>
+                    </div>
+                  }
+                }
               }
             </div>
           }
