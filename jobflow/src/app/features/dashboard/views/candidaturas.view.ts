@@ -10,7 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SavedJobsService, KanbanStatus, type SavedJobItem } from '../../../core/services/saved-jobs.service';
-import { AiService, AiJobAnalysis } from '../../../core/services/ai.service';
+import { AiService, AiJobAnalysis, AiInterviewCoachResponse, AiCoverLetterResponse } from '../../../core/services/ai.service';
 import { mountDashboardView, viewRoot } from '../dashboard-view-host';
 
 export interface KanbanCard {
@@ -41,6 +41,15 @@ export class CandidaturasViewComponent implements OnDestroy {
   readonly aiJobResult = signal<AiJobAnalysis | null>(null);
   readonly aiJobResultForId = signal<string | null>(null);
   readonly aiJobError = signal<string | null>(null);
+
+  // Novas tabs e dados
+  readonly activeAiTab = signal<'match' | 'interview' | 'cover-letter'>('match');
+  readonly aiInterviewResult = signal<AiInterviewCoachResponse | null>(null);
+  readonly aiCoverLetterResult = signal<AiCoverLetterResponse | null>(null);
+  readonly loadingInterview = signal<boolean>(false);
+  readonly loadingCoverLetter = signal<boolean>(false);
+  readonly interviewError = signal<string | null>(null);
+  readonly coverLetterError = signal<string | null>(null);
 
   readonly saved = computed<KanbanCard[]>(() =>
     this.savedJobsService.savedJobs().filter((item) => item.status === 'saved').map(toKanbanCard),
@@ -112,6 +121,12 @@ export class CandidaturasViewComponent implements OnDestroy {
     this.aiJobResult.set(null);
     this.aiJobResultForId.set(null);
     this.aiJobError.set(null);
+    this.aiInterviewResult.set(null);
+    this.aiCoverLetterResult.set(null);
+    this.interviewError.set(null);
+    this.coverLetterError.set(null);
+    this.activeAiTab.set('match');
+
     this.aiService.analyzeJobFit(card.jobId).subscribe((result) => {
       this.analyzingJobId.set(null);
       if (result.success) {
@@ -123,10 +138,42 @@ export class CandidaturasViewComponent implements OnDestroy {
     });
   }
 
+  switchTab(tab: 'match' | 'interview' | 'cover-letter', card: KanbanCard): void {
+    this.activeAiTab.set(tab);
+    if (tab === 'interview' && !this.aiInterviewResult()) {
+      this.loadingInterview.set(true);
+      this.interviewError.set(null);
+      this.aiService.getInterviewPreparation(card.jobId).subscribe((result) => {
+        this.loadingInterview.set(false);
+        if (result.success) {
+          this.aiInterviewResult.set(result.data);
+        } else {
+          this.interviewError.set(result.error);
+        }
+      });
+    } else if (tab === 'cover-letter' && !this.aiCoverLetterResult()) {
+      this.loadingCoverLetter.set(true);
+      this.coverLetterError.set(null);
+      this.aiService.generateCoverLetter(card.jobId).subscribe((result) => {
+        this.loadingCoverLetter.set(false);
+        if (result.success) {
+          this.aiCoverLetterResult.set(result.data);
+        } else {
+          this.coverLetterError.set(result.error);
+        }
+      });
+    }
+  }
+
   closeAiJobResult(): void {
     this.aiJobResult.set(null);
     this.aiJobResultForId.set(null);
     this.aiJobError.set(null);
+    this.aiInterviewResult.set(null);
+    this.aiCoverLetterResult.set(null);
+    this.interviewError.set(null);
+    this.coverLetterError.set(null);
+    this.activeAiTab.set('match');
   }
 }
 

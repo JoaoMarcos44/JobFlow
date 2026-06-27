@@ -27,12 +27,37 @@ export interface AiResumeAnalysis {
   resumoPerfil: string;
 }
 
+export interface AiInterviewCoachResponse {
+  perguntasTecnicas: string[];
+  perguntasComportamentais: string[];
+  respostasModelo: { pergunta: string; sugestaoResposta: string }[];
+  dicasPreparacao: string[];
+  pontosFortes: string[];
+  resumoVaga: string;
+}
+
+export interface AiCoverLetterResponse {
+  cartaCompleta: string;
+  assunto: string;
+  pontosDestaque: string[];
+  tomSugerido: string;
+  dicaPersonalizacao: string;
+}
+
 export type AiResumeResult =
   | { success: true; data: AiResumeAnalysis }
   | { success: false; error: string };
 
 export type AiJobResult =
   | { success: true; data: AiJobAnalysis }
+  | { success: false; error: string };
+
+export type AiInterviewCoachResult =
+  | { success: true; data: AiInterviewCoachResponse }
+  | { success: false; error: string };
+
+export type AiCoverLetterResult =
+  | { success: true; data: AiCoverLetterResponse }
   | { success: false; error: string };
 
 @Injectable({ providedIn: 'root' })
@@ -76,6 +101,38 @@ export class AiService {
             error:
               err?.error?.error ??
               `Erro ao analisar vaga (${err?.status ?? 'rede'}).`,
+          }),
+        ),
+      );
+  }
+
+  getInterviewPreparation(jobId: string): Observable<AiInterviewCoachResult> {
+    return this.http
+      .post<AiInterviewCoachResponse>(`${AI_API}/jobs/${jobId}/interview-coach`, {})
+      .pipe(
+        map((data) => ({ success: true as const, data })),
+        catchError((err) =>
+          of({
+            success: false as const,
+            error:
+              err?.error?.error ??
+              `Erro ao gerar preparação para entrevista (${err?.status ?? 'rede'}).`,
+          }),
+        ),
+      );
+  }
+
+  generateCoverLetter(jobId: string): Observable<AiCoverLetterResult> {
+    return this.http
+      .post<AiCoverLetterResponse>(`${AI_API}/jobs/${jobId}/cover-letter`, {})
+      .pipe(
+        map((data) => ({ success: true as const, data })),
+        catchError((err) =>
+          of({
+            success: false as const,
+            error:
+              err?.error?.error ??
+              `Erro ao gerar carta de apresentação (${err?.status ?? 'rede'}).`,
           }),
         ),
       );
